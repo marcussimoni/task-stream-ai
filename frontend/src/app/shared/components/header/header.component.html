@@ -1,0 +1,37 @@
+<header class="app-header">
+  <div class="container">
+    <div class="header-container">
+      <div class="header-content">
+        <button class="hamburger-btn" (click)="navService.toggleSidebar()" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <a routerLink="/metrics" routerLinkActive="active" class="logo-link">
+          <img src="../../../../favicon.png" [alt]="title" [title]="title" class="app-logo">
+        </a>
+        <div class="app-info">
+          <h1>{{ appInfo()?.name }}</h1>
+          <h4>{{ appInfo()?.description }}</h4>
+          <h6>Version: {{ appInfo()?.version }}</h6>
+        </div>
+      </div>
+      <div>
+        <div class="connection-status" [class]="alarmService.status()">
+          <span class="status-dot"></span>
+          <span class="status-text">SSE: {{ connectionStatusText }}</span>
+        </div>
+        <div class="space-between"></div>
+        <div class="connection-status" [class]="backendStatusClass()">
+          <span class="status-dot"></span>
+          <span class="status-text">Backend: {{ backendStatus() }}</span>
+        </div>
+        <div class="space-between"></div>
+        <div class="connection-status" [class]="iaModelStatusClass()">
+          <span class="status-dot"></span>
+          <span class="status-text">AI Model: {{ backendStatus() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

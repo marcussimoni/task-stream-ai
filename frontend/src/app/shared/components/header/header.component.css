@@ -1,0 +1,175 @@
+.app-header {
+  background-color: #1a5692;
+  color: white;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.app-logo {
+  width: 50px;
+  height: 50px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background-color: white;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover span {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.logo-link {
+  display: flex;
+  text-decoration: none;
+}
+
+.logo-link:hover {
+  opacity: 0.9;
+}
+
+/* Connection Status Indicator */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgb(177, 216, 255);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s ease;
+}
+
+/* Connected state - green */
+.connection-status.connected .status-dot {
+  background-color: #4caf50;
+  box-shadow: 0 0 8px #4caf50;
+}
+
+/* Connecting state - yellow */
+.connection-status.connecting .status-dot {
+  background-color: #ffc107;
+  box-shadow: 0 0 8px #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+/* Disconnected state - red */
+.connection-status.disconnected .status-dot {
+  background-color: #f44336;
+  box-shadow: 0 0 8px #f44336;
+}
+
+/* Disconnected state - red */
+.connection-status-backend-down .status-dot {
+  background-color: #f44336;
+  box-shadow: 0 0 8px #f44336;
+}
+
+.connection-status-backend-up .status-dot {
+  background-color: #4caf50;
+  box-shadow: 0 0 8px #4caf50;
+}
+
+.connection-status-backend-waiting .status-dot {
+  background-color: #ffc107;
+  box-shadow: 0 0 8px #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Audio Unlock Banner */
+.audio-unlock-banner {
+  background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.audio-unlock-banner:hover {
+  background: linear-gradient(90deg, #f57c00 0%, #ef6c00 100%);
+}
+
+.unlock-icon {
+  font-size: 1.2rem;
+}
+
+.unlock-text {
+  font-size: 0.95rem;
+}
+
+.space-between {
+  margin: 0.2rem 0;
+}
+
+.app-info h1, .app-info h4, .app-info h6 {
+  padding: 5px;
+  margin: 0px;
+  /* font-family: 'Raleway', sans-serif; */
+  font-weight: lighter;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

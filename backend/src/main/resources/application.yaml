@@ -1,0 +1,73 @@
+server:
+  servlet:
+    context-path: /
+  shutdown: graceful
+  graceful-shutdown:
+    timeout: 30s
+  tomcat:
+    threads:
+      max: 2
+
+spring:
+  banner:
+    location: banner/banner.txt
+  profiles:
+    active: prod
+  application:
+    name: task-stream-ai
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    repair-on-start: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: daily_track
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.2:3b
+  mvc:
+    throw-exception-if-no-handler-found: false
+
+database:
+  backup:
+    base-path: .task-stream-ai/backups
+
+logging:
+  logback:
+    rollingpolicy:
+      # Pattern for archived files (adds date and index)
+      file-name-pattern: ${user.home}/logs/archived/myapp-%d{yyyy-MM-dd}.%i.log
+      # Archive when file hits 10MB
+      max-file-size: 10MB
+      # Keep 7 days worth of history
+      max-history: 7
+      # Total cap for all logs (stops logs from eating your entire hard drive)
+      total-size-cap: 1GB
+      # Clean up old logs on startup
+      clean-history-on-start: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@

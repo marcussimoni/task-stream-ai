@@ -1,0 +1,14 @@
+<app-toast-container></app-toast-container>
+<app-header></app-header>
+<app-nav></app-nav>
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
+<app-footer></app-footer>
+
+<!-- Alarm modal - visible on all pages -->
+<app-alarm-modal
+  [alarm]="alarmService.activeAlarm()"
+  (acknowledge)="alarmService.acknowledge()"
+  (dismiss)="alarmService.dismiss()">
+</app-alarm-modal>

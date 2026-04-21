@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+  pointer-events: none;
+
+  @media (max-width: 640px) {
+    top: 0;
+    right: 0;
+    left: 0;
+    padding: 8px;
+  }
+}
+
+.toast-container app-toast {
+  pointer-events: auto;
+}

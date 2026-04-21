@@ -1,0 +1,43 @@
+<div class="sidebar-overlay" [class.open]="isOpen" (click)="onNavClick()"></div>
+<nav class="sidebar" [class.open]="isOpen">
+  <div class="sidebar-header">
+    <span class="sidebar-title">Menu</span>
+    <button class="close-btn" (click)="onNavClick()" aria-label="Close menu">×</button>
+  </div>
+  <ul class="sidebar-list">
+    <!-- Grouped Menus -->
+    <li class="sidebar-group" *ngFor="let group of navGroups">
+      <button 
+        class="sidebar-group-header" 
+        (click)="toggleGroup(group)"
+        [class.expanded]="group.expanded">
+        <span>{{ group.label }}</span>
+        <span class="expand-icon">{{ group.expanded ? '▼' : '▶' }}</span>
+      </button>
+      <ul class="sidebar-sublist" *ngIf="group.expanded">
+        <li class="sidebar-subitem" *ngFor="let item of group.items">
+          <a 
+            class="sidebar-link" 
+            [class.active]="isActive(item.path)"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            (click)="onNavClick()">
+            {{ item.label }}
+          </a>
+        </li>
+      </ul>
+    </li>
+    
+    <!-- Standalone Items -->
+    <li class="sidebar-item" *ngFor="let item of standaloneItems">
+      <a 
+        class="sidebar-link" 
+        [class.active]="isActive(item.path)"
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        (click)="onNavClick()">
+        {{ item.label }}
+      </a>
+    </li>
+  </ul>
+</nav>

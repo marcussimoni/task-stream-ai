@@ -1,0 +1,117 @@
+<div class="container">
+  <div class="card">
+    <div class="header-section">
+      <h2><i class="fas fa-database"></i> Database Backup & Restore</h2>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="actions-bar">
+      <button 
+        class="btn btn-primary" 
+        (click)="createBackup()" 
+        [disabled]="operationInProgress()"
+      >
+        <i class="fas fa-save"></i>
+        <span *ngIf="!operationInProgress()">Create Backup</span>
+        <span *ngIf="operationInProgress()">Processing...</span>
+      </button>
+    </div>
+
+    <!-- Backup List Table -->
+    <div class="table-section">
+      <h3>Available Backups</h3>
+
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading-state">
+        <div class="spinner-border spinner-border-sm"></div>
+        <span>Loading backups...</span>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading() && backups().length === 0" class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No backups available. Click 'Create Backup' to create your first backup.</p>
+      </div>
+
+      <!-- Backup Table -->
+      <div *ngIf="!loading() && backups().length > 0" class="table-responsive">
+        <table class="backup-table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Directory</th>
+              <th>Size</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let backup of backups()">
+              <td class="filename-cell">
+                <i class="fas fa-file-archive"></i>
+                {{ backup.filename }}
+              </td>
+              <td>{{ backup.directory }}</td>
+              <td>{{ backup.size }}</td>
+              <td>{{ formatDate(backup.createdAt) }}</td>
+              <td class="actions-cell">
+                <button 
+                  class="btn btn-outline-danger btn-sm" 
+                  (click)="openRestoreModal(backup.filename)"
+                  [disabled]="operationInProgress()"
+                >
+                  <i class="fas fa-undo"></i> Restore
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Restore Confirmation Modal -->
+<div *ngIf="showRestoreModal()" class="modal-overlay" (click)="closeRestoreModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-exclamation-triangle"></i> Restore Database</h3>
+      <button class="close-btn" (click)="closeRestoreModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-section">
+        <div class="warning-icon">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="warning-content">
+          <p class="warning-title">Warning:</p>
+          <p class="warning-message">
+            This process will delete all existing data and replace it with the selected backup file. 
+            This action cannot be undone.
+          </p>
+          <div class="selected-file">
+            <strong>File:</strong> {{ selectedBackupFilename() }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeRestoreModal()">
+        Cancel
+      </button>
+      <button 
+        class="btn btn-danger" 
+        (click)="confirmRestore()"
+        [disabled]="operationInProgress()"
+      >
+        <span *ngIf="!operationInProgress()">
+          <i class="fas fa-undo"></i> Restore Backup
+        </span>
+        <span *ngIf="operationInProgress()">
+          <div class="spinner-border spinner-border-sm"></div>
+          Restoring...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,117 @@
+<div class="container">
+  <div class="card">
+    <h2>Tags</h2>
+
+    <!-- Create Button -->
+    <div class="create-button-section">
+      <button class="btn btn-primary" (click)="openModal()">
+        + Create New Tag
+      </button>
+    </div>
+
+    <!-- Search and Tags List -->
+    <div class="tags-section">
+      <div class="search-header">
+        <h3>Your Tags</h3>
+        <div class="search-bar">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search tags..."
+            [(ngModel)]="searchQuery"
+            (input)="searchTags()"
+            (keyup.enter)="searchTags()">
+          <button class="btn btn-outline-secondary" (click)="clearSearch()" *ngIf="searchQuery">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="getFilteredTags().length === 0" class="text-center text-muted">
+        {{ searchQuery ? 'No tags found matching your search.' : 'No tags yet. Create your first tag!' }}
+      </div>
+
+      <div *ngIf="getFilteredTags().length > 0" class="tags-grid">
+        <div *ngFor="let tag of getFilteredTags()" class="tag-card">
+          <div class="tag-header">
+            <div class="tag-info">
+              <div class="tag-color" [style.background-color]="tag.color"></div>
+              <h5>{{ tag.name }}</h5>
+            </div>
+            <div class="tag-actions">
+              <button class="btn btn-sm btn-outline-primary" (click)="editTag(tag)">Edit</button>
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteTag(tag.id!)">Delete</button>
+            </div>
+          </div>
+          <p *ngIf="tag.description" class="tag-description">{{ tag.description }}</p>
+          <div class="tag-usage">
+            <small class="text-muted">{{ tag.totalUsed == 0 ? 'Not used' : tag.totalUsed + ' times used' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tag Modal -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditing ? 'Edit Tag' : 'Create New Tag' }}</h3>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="tagForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Tag Name *</label>
+            <input
+              type="text"
+              id="name"
+              class="form-control"
+              formControlName="name"
+              [class.is-invalid]="tagForm.get('name')?.invalid && tagForm.get('name')?.touched"
+              placeholder="Enter tag name">
+            <div *ngIf="tagForm.get('name')?.invalid && tagForm.get('name')?.touched" class="invalid-feedback">
+              Tag name is required
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            class="form-control"
+            formControlName="description"
+            rows="3"
+            placeholder="Describe the tag..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Color *</label>
+          <div class="color-picker">
+            <div
+              *ngFor="let color of availableColors"
+              class="color-option"
+              [class.selected]="selectedColor === color"
+              [style.background-color]="color"
+              (click)="selectColor(color)">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+            Close
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="tagForm.invalid">
+            <i class="fa-solid fa-plus"></i>
+            {{ isEditing ? 'Update Tag' : 'Create Tag' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

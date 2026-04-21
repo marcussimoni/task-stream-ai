@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: task-stream-ai
+  datasource:
+    url: jdbc:h2:file:~/.task-stream-ai-dev/data/h2/trackdailyapp;INIT=CREATE SCHEMA IF NOT EXISTS daily_track\;SET SCHEMA daily_track;AUTO_SERVER=TRUE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximumPoolSize: 5
+      minimumIdle: 1
+      idleTimeout: 30000
+      maxLifetime: 1800000
+      connectionTimeout: 30000
+      pool-name: task-stream-ai-HikariCP
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+logging:
+  file:
+    name: ${user.home}/.task-stream-ai-dev/logs/task-stream-ai.log
+  level:
+    br:
+      com:
+        taskstreamai: DEBUG
+
+database:
+  backup:
+    base-path: .task-stream-ai-dev/backups
+
+application:
+  start-alarm-scheduler: "0 */1 * * * *"
+  start-database-backup-scheduler: "0 0 10 * * *"

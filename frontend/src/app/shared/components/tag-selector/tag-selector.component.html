@@ -1,0 +1,33 @@
+<div class="tag-selector">
+  <label class="form-label">Tags</label>
+  
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading tags...</span>
+    </div>
+  </div>
+  
+  <div *ngIf="!isLoading && tags.length === 0" class="text-muted">
+    No tags available. <a routerLink="/tags">Create some tags first</a>.
+  </div>
+
+  <div *ngIf="!isLoading && tags.length > 0" class="tag-list">
+    <div
+      *ngFor="let tag of tags"
+      class="tag-item"
+      [class.selected]="isTagSelected(tag.id!)"
+      (click)="toggleTag(tag.id!)">
+      <div class="tag-color" [style.background-color]="tag.color"></div>
+      <span class="tag-name">{{ tag.name }}</span>
+      <div class="tag-check" *ngIf="isTagSelected(tag.id!)">
+        ✓
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="getSelectedTags().length > 0" class="selected-preview">
+    <small class="text-muted">
+      Selected: {{ selectedTagsText }}
+    </small>
+  </div>
+</div>

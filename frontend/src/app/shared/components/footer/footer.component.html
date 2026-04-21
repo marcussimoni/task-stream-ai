@@ -1,0 +1,12 @@
+<footer class="app-footer">
+  <div class="footer-container">
+    <div class="footer-section footer-brand">
+      <span class="app-name">{{ appInfo()?.name }}</span>
+      <span class="app-version">v{{ appInfo()?.version }}</span>
+    </div>
+
+    <div class="footer-section footer-info">
+      <span class="copyright">© {{ currentYear() }} {{ appInfo()?.name }}</span>
+    </div>
+  </div>
+</footer>

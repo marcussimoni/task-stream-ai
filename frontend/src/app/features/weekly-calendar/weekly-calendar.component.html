@@ -1,0 +1,206 @@
+<div class="weekly-calendar-container">
+  <!-- Header -->
+  <div class="calendar-header">
+    <div class="header-left">
+      <h2>Week Calendar</h2>
+      <span class="week-range">{{ getWeekRange() }}</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-nav" (click)="previousWeek()" title="Previous Week">
+        &#8249;
+      </button>
+      <button class="btn-today" (click)="goToToday()" [class.active]="isCurrentWeek">
+        Today
+      </button>
+      <button class="btn-nav" (click)="nextWeek()" title="Next Week">
+        &#8250;
+      </button>
+    </div>
+  </div>
+
+  <!-- No Tags Warning -->
+  <div class="no-tags-warning" *ngIf="hasNoTags">
+    <p>No tags created yet. <a (click)="navigateToTasks()">Create tags first</a> to use the calendar.</p>
+  </div>
+
+  <!-- Calendar Grid -->
+<div class="calendar-grid" *ngIf="!hasNoTags">
+    <!-- Time Column Header -->
+    <div class="time-header">Time</div>
+
+    <!-- Day Headers -->
+    <div
+      class="day-header"
+      *ngFor="let day of days; let i = index"
+      [class.current-day]="isCurrentDay(i)">
+      <span class="day-name">{{ day }}</span>
+      <span class="day-date">{{ getDayDate(i) }}</span>
+    </div>
+
+    <!-- Time Labels and Cells -->
+    <ng-container *ngFor="let hour of hours">
+      <!-- Time Label -->
+      <div class="time-label" [class.current-hour]="isCurrentHour(hour)">
+        {{ hour }}:00
+      </div>
+
+      <!-- Calendar Cells -->
+      <div
+        class="calendar-cell"
+        *ngFor="let day of days; let dayIndex = index"
+        [class.has-tag]="getCell(dayIndex, hour).schedule"
+        [class.current-day]="isCurrentDay(dayIndex)"
+        [class.alarm-highlight]="isHighlighted(getCell(dayIndex, hour))"
+        (click)="onCellClick(getCell(dayIndex, hour))">
+        
+        <!-- Empty Cell State -->
+        <div class="cell-empty" *ngIf="!getCell(dayIndex, hour).schedule">
+          <span class="add-icon">+</span>
+        </div>
+        
+        <!-- Cell with Tag and Task -->
+        <div class="cell-content" *ngIf="getCell(dayIndex, hour).schedule as schedule">
+          <div 
+            class="tag-badge"
+            [style.background-color]="schedule.tag?.color || '#3B82F6'">
+            {{ schedule.tag?.name }}
+          </div>
+          
+          <div class="task-info" *ngIf="schedule.task" (click)="onTaskClick(schedule.task, $event)">
+            <span class="task-name">{{ schedule.task.name }}</span>
+            <div class="task-progress">
+              <div 
+                class="progress-bar"
+                [class.high]="getProgressColor(getProgressPercentage(schedule.task)) === 'high'"
+                [class.medium]="getProgressColor(getProgressPercentage(schedule.task)) === 'medium'"
+                [class.low]="getProgressColor(getProgressPercentage(schedule.task)) === 'low'"
+                [style.width.%]="getProgressPercentage(schedule.task)">
+              </div>
+              <span class="progress-text">{{ getProgressPercentage(schedule.task) }}%</span>
+            </div>
+          </div>
+          <div class="no-task" *ngIf="!schedule.task">
+            <span>No pending tasks</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading()">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- Tag Selection Modal -->
+<div class="modal-overlay" *ngIf="showTagModal()" (click)="closeTagModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Assign Tag</h3>
+      <button class="btn-close" (click)="closeTagModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="modal-subtitle" *ngIf="selectedCell()">
+        {{ fullDays[selectedCell()!.dayOfWeek] }} at {{ selectedCell()!.hour }}:00
+      </p>
+
+      <!-- Day Selector -->
+      <div class="day-selector" *ngIf="selectedCell()">
+        <div class="day-toggles">
+          <button
+            *ngFor="let day of days; let i = index"
+            class="day-toggle"
+            [class.selected]="isDaySelected(i)"
+            (click)="toggleDay(i)">
+            {{ day }}
+          </button>
+          <button class="day-toggle all-btn" (click)="toggleAllDays()">
+            All
+          </button>
+        </div>
+      </div>
+
+      <div class="tag-list">
+        <button
+          class="tag-item"
+          *ngFor="let tag of tags()"
+          (click)="selectTag(tag)"
+          [class.selected]="selectedCell()?.schedule?.tag?.id === tag.id">
+          <span class="tag-color" [style.background-color]="tag.color"></span>
+          <span class="tag-name">{{ tag.name }}</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button 
+        class="btn-remove"
+        *ngIf="selectedCell()?.schedule"
+        (click)="removeTag()">
+        Remove Assignment
+      </button>
+      <button class="btn-cancel" (click)="closeTagModal()">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Details Modal -->
+<div class="modal-overlay" *ngIf="showTaskDetails()" (click)="closeTaskDetails()">
+  <div class="modal-content task-details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Task Details</h3>
+      <button class="btn-close" (click)="closeTaskDetails()">&times;</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedTask() as task">
+      <h4 class="task-title">{{ task.name }}</h4>
+      <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
+      
+      <div class="task-meta">
+        <div class="meta-item">
+          <span class="meta-label">Progress:</span>
+          <span class="meta-value">{{ task.currentValue || 0 }} / 100 ({{ getProgressPercentage(task) }}%)</span>
+        </div>
+        <div class="meta-item" *ngIf="task.startDate">
+          <span class="meta-label">Start Date:</span>
+          <span class="meta-value">{{ task.startDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="meta-item" *ngIf="task.endDate">
+          <span class="meta-label">End Date:</span>
+          <span class="meta-value">{{ task.endDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Status:</span>
+          <span class="meta-value" [class.completed]="task.completed">
+            {{ task.completed ? 'Completed' : 'In Progress' }}
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Priority:</span>
+          <span class="priority-badge" 
+              [style.background-color]="getPriorityColor(task.priority) + '20'"
+              [style.color]="getPriorityColor(task.priority)">
+              {{ task.priority }}
+           </span>
+        </div>
+        <div class="meta-item" *ngIf="task.link">
+          <span class="meta-label">Link:</span>
+          <a [href]="task.link" target="_blank" [title]="task.link" class="btn btn-sm btn-outline-link">site</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="navigateToTasks()">
+        Edit Task
+      </button>
+      <button class="btn-cancel" (click)="closeTaskDetails()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

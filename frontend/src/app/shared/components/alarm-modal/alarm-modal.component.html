@@ -1,0 +1,27 @@
+<div class="alarm-modal-overlay" *ngIf="alarm()">
+  <div class="alarm-modal" [style.border-color]="alarm()?.tagColor">
+    <div class="alarm-header" [style.background-color]="alarm()?.tagColor + '20'">
+      <span class="alarm-icon">⏰</span>
+      <h2>{{ isStartAlarm() ? 'TIME TO START!' : 'Reminder' }}</h2>
+    </div>
+
+    <div class="alarm-body">
+      <h3 [style.color]="alarm()?.tagColor">{{ alarm()?.tagName }}</h3>
+
+      <!-- Task name displayed prominently -->
+      <p class="task-name" *ngIf="alarm()?.taskName">
+        <strong>Task:</strong> {{ alarm()?.taskName }}
+      </p>
+
+      <p class="alarm-message">{{ alarm()?.message }}</p>
+      <p class="scheduled-time">{{ alarm()?.scheduledTime | date:'shortTime' }}</p>
+    </div>
+
+    <div class="alarm-actions">
+      <button class="btn-primary" (click)="onStart()">
+        {{ isStartAlarm() ? 'Start Task' : 'OK' }}
+      </button>
+      <button class="btn-dismiss" (click)="onDismiss()">Dismiss</button>
+    </div>
+  </div>
+</div>

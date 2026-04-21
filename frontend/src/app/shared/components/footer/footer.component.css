@@ -1,0 +1,61 @@
+.app-footer {
+  background-color: #1a5692;
+  color: white;
+  padding: 1rem 2rem;
+  margin-top: auto;
+}
+
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.footer-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-brand {
+  font-size: 0.875rem;
+  color: white;
+}
+
+.app-name {
+  font-weight: 600;
+}
+
+.app-version {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+}
+
+.footer-info {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.copyright {
+  white-space: nowrap;
+}
+
+/* Responsive behavior - Mobile */
+@media (max-width: 768px) {
+  .app-footer {
+    padding: 1rem;
+  }
+
+  .footer-container {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .footer-section {
+    justify-content: center;
+  }
+}

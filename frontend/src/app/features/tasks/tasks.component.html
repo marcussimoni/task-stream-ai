@@ -1,0 +1,300 @@
+<div class="container">
+  <div class="card">
+    <!-- Header with Title and Month Navigation -->
+    <div class="tasks-header">
+      <h2>Tasks</h2>
+      <div class="month-navigation">
+        <button class="btn btn-outline-secondary" (click)="previousMonth()">
+          &larr; Previous
+        </button>
+        <div class="month-label">
+          <span class="month-name">{{ monthLabel() }}</span>
+          <button class="btn btn-sm btn-link" (click)="goToCurrentMonth()">
+            Current Month
+          </button>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="nextMonth()">
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- Create Button -->
+    <div class="create-button-section">
+      <button class="btn btn-primary" (click)="openModal()">
+        + Create New Task
+      </button>
+      <div>
+        <a class="btn btn-calendar" href="/weekly-calendar"><i class="fa-regular fa-calendar"></i>Weekly Calendar</a>
+        <button [class]="completedTasks() ? 'btn btn-secondary-true' : 'btn btn-secondary-false'" (click)="showCompletedTasks()">
+          <i class="fa-regular fa-eye" *ngIf="!completedTasks()"></i>
+          <i class="fa-regular fa-eye-slash" *ngIf="completedTasks()"></i>
+          {{ completedTasks() ? 'Hide completed tasks' : 'Show completed tasks' }}
+        </button>
+        <div class="tag-checkbox">
+          <select
+            id="tagId"
+            class="form-control"
+            (change)="onTagChange($event)"
+            [class.is-invalid]="taskForm.get('tagId')?.invalid && taskForm.get('tagId')?.touched">
+            <option value="">Filter by tag</option>
+            <option *ngFor="let tag of tags()" [value]="tag.id">
+              {{ tag.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weeks List -->
+    <div class="weeks-list">
+      <div *ngIf="weeksInMonth().length === 0" class="text-center text-muted">
+        No tasks planned for this month.
+      </div>
+
+      <div 
+        *ngFor="let week of weeksInMonth()" 
+        class="week-section">
+        
+        <div class="week-header">
+          <span class="week-label">{{ week.weekLabel }}</span>
+          <span class="week-task-count">{{ week.tasks.length }} task{{ week.tasks.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="tasks-list">
+          <div *ngIf="week.tasks.length === 0" class="text-center text-muted week-empty">
+            No tasks this week
+          </div>
+          
+          <div 
+            *ngFor="let task of week.tasks" 
+            [ngClass]="task.completed ? 'task-item-completed' : 'task-item'">
+            <div class="task-header">
+              <a (click)="editTask(task)" title="Open Task" class="title-link"><h4>{{ task.name }}</h4></a>
+              <div class="task-actions">
+                <span *ngIf="task.link">
+                  <a [href]="task.link" target="_blank" class="btn btn-sm btn-outline-link" [title]="task.link">site</a>    
+                </span>
+                <button class="btn btn-sm btn-outline-primary" (click)="editTask(task)">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteTask(task.id!)">Delete</button>
+                <button 
+                  class="btn btn-sm" 
+                  [class.btn-success]="task.completed"
+                  [class.btn-outline-success]="!task.completed"
+                  (click)="markAsCompleted(task)">
+                  {{ task.completed ? 'Completed' : 'Mark Complete' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="task-details">
+              <p *ngIf="task.description">{{ task.description }}</p>
+              <div class="task-meta">            
+                <span *ngIf="task.tag" class="tag-badge" [style.background-color]="task.tag.color + '20'" [style.color]="task.tag.color">
+                  {{ task.tag.name }}
+                </span>
+                <span class="priority-badge" 
+                      [style.background-color]="getPriorityColor(task.priority) + '20'"
+                      [style.color]="getPriorityColor(task.priority)">
+                  {{ getPriorityLabel(task.priority) }}
+                </span>
+                <span *ngIf="task.startDate">Start Date: {{ task.startDate | date:'mediumDate' }}</span>
+                <span>|</span>
+                <span>End date: {{ task.endDate | date:'mediumDate' }}</span>
+              </div>
+
+              <div class="progress-container">
+                <div class="progress-label">
+                  Progress: {{ task.currentValue || 0 }} / 100
+                  ({{ getProgressPercentage(task) | number:'1.0-0' }}%)
+                </div>
+                <div class="progress">
+                  <div 
+                    class="progress-bar" 
+                    [style.width.%]="getProgressPercentage(task)"
+                    [class.bg-success]="task.completed">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div *ngIf="showModal()" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditing() ? 'Edit Task' : 'Create New Task' }}</h3>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+        <div class="form-flex">
+          
+          <div class="form-flex-group">
+            <label for="name">Name *</label>
+            <input 
+              type="text" 
+              id="name" 
+              class="form-control" 
+              formControlName="name"
+              [class.is-invalid]="taskForm.get('name')?.invalid && taskForm.get('name')?.touched"
+              placeholder="Enter task name">
+            <div *ngIf="taskForm.get('name')?.invalid && taskForm.get('name')?.touched" class="invalid-feedback">
+              Name is required
+            </div>
+          </div>
+
+          <div class="form-flex-group">
+            <label for="link">Link</label>
+            <input 
+              type="text" 
+              id="link" 
+              class="form-control" 
+              formControlName="link"
+              placeholder="Enter link"
+              (change)="loadLinkContent()">
+          </div>
+
+          <div class="form-flex-group">
+            <label for="description">Description</label>
+            <input 
+              type="text"
+              id="description" 
+              class="form-control" 
+              formControlName="description"
+              placeholder="Describe your task">
+          </div>
+
+        </div>
+
+        <div class="line"></div>
+
+        <div class="form-flex" *ngIf="taskForm.get('summary')?.value?.length > 0">
+            <div class="form-flex-group">
+              <label for="summary">Summary</label>
+              <!-- <textarea 
+                rows="10"
+                id="summary" 
+                class="form-control" 
+                formControlName="summary"></textarea> -->
+                <div [innerHTML]="summaryMarkdown()" class="summary"></div>
+          </div>
+        </div>
+
+        <h4>Task period interval</h4>
+        <div class="dates-period">
+
+          <div class="form-group">
+            <label for="endDateType">End Date Type interval</label>
+            Weeks <input type="radio" name="customEndDateSelected" [value]="false" formControlName="customEndDateSelected">
+            Custom <input type="radio" name="customEndDateSelected" [value]="true" formControlName="customEndDateSelected">
+          </div>
+
+          <div class="form-group">
+            <label for="startDate">Start Date *</label>
+            <input 
+              type="date" 
+              id="startDate" 
+              class="form-control" 
+              formControlName="startDate">
+          </div>
+
+          <div class="form-group" *ngIf="!taskForm.get('customEndDateSelected')?.value">
+            <label for="endDateInterval">End Date Interval (Weeks) *</label>
+            <select 
+              id="endDateInterval" 
+              class="form-control" 
+              formControlName="endDateInterval">
+              <option value="">Select interval</option>
+              <option [value]="1">1 week from start date</option>
+              <option [value]="2">2 weeks from start date</option>
+              <option [value]="3">3 weeks from start date</option>
+              <option [value]="4">4 weeks from start date</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="taskForm.get('customEndDateSelected')?.value">
+            <label for="customEndDate">Custom End Date *</label>
+            <input 
+              type="date" 
+              id="customEndDate" 
+              class="form-control" 
+              formControlName="endDate">
+          </div>
+        </div>
+        
+        <h4>Tag and progress tracking</h4>
+
+        <div class="form-flex">
+
+          <div class="form-flex-group">
+            <label for="tagId">Tag *</label>
+            <select
+              id="tagId"
+              class="form-control"
+              formControlName="tagId"
+              [class.is-invalid]="taskForm.get('tagId')?.invalid && taskForm.get('tagId')?.touched">
+              <option value="">Select a tag</option>
+              <option *ngFor="let tag of tags()" [value]="tag.id">
+                {{ tag.name }}
+              </option>
+            </select>
+            <div *ngIf="taskForm.get('tagId')?.invalid && taskForm.get('tagId')?.touched" class="invalid-feedback">
+              Tag is required
+            </div>
+          </div>
+
+          <div class="form-flex-group">
+            <label for="priority">Priority *</label>
+            <select
+              id="priority"
+              class="form-control"
+              formControlName="priority"
+              [class.is-invalid]="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched">
+              <option value="">Select priority</option>
+              <option *ngFor="let priority of priorities" [value]="priority">
+                {{ getPriorityLabel(priority) }}
+              </option>
+            </select>
+            <div *ngIf="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched" class="invalid-feedback">
+              Priority is required
+            </div>
+          </div>
+
+          <div class="form-flex-group">
+            <label for="currentValue">Current Value</label>
+            <input 
+              type="number" 
+              id="currentValue" 
+              class="form-control" 
+              formControlName="currentValue"
+              [class.is-invalid]="taskForm.get('currentValue')?.invalid && taskForm.get('currentValue')?.touched"
+              min="0">
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+            Close
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="taskForm.invalid">
+            <i class="fa-solid fa-plus" *ngIf="!isEditing()"></i> 
+            <i class="fa-regular fa-pen-to-square" *ngIf="isEditing()"></i>
+            {{ isEditing() ? 'Update Task' : 'Create Task' }}
+          </button>
+          <button type="button" class="btn btn-success" (click)="markAsCompleted(taskForm.value)" *ngIf="isEditing() && !taskForm.value.completed">
+            <i class="fa-solid fa-list-check"></i>
+            Mark as Completed
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

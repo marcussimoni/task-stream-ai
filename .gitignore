@@ -16,7 +16,3 @@ frontend/.angular
 #backend
 
 backend/src/main/resources/static
-
-#others
-src
-target

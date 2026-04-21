@@ -1,0 +1,118 @@
+<div class="container">
+  <div class="card">
+    <div class="monthly-overview-header">
+      <h2>Monthly Overview</h2>
+      <div class="month-navigation">
+        <button class="btn btn-outline-secondary" (click)="previousMonth()">
+          &larr; Previous
+        </button>
+        <div class="month-label">
+          <span class="month-name">{{ monthLabel }}</span>
+          <button class="btn btn-sm btn-link" (click)="goToCurrentMonth()">
+            Current Month
+          </button>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="nextMonth()">
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+
+    <div class="sort-controls">
+      <span>Sort by:</span>
+      <button 
+        class="btn btn-sm" 
+        [class.btn-primary]="sortField === 'name'"
+        [class.btn-outline-secondary]="sortField !== 'name'"
+        (click)="setSort('name')">
+        Name {{ sortField === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : '' }}
+      </button>
+      <button 
+        class="btn btn-sm" 
+        [class.btn-primary]="sortField === 'tag'"
+        [class.btn-outline-secondary]="sortField !== 'tag'"
+        (click)="setSort('tag')">
+        Tag {{ sortField === 'tag' ? (sortDirection === 'asc' ? '↑' : '↓') : '' }}
+      </button>
+    </div>
+
+    <div *ngIf="weeksInMonth.length === 0" class="text-center text-muted empty-state">
+      <p>No tasks planned for this month.</p>
+      <p class="hint">Tasks with start/end dates overlapping this month will appear here.</p>
+    </div>
+
+    <div *ngIf="weeksInMonth.length > 0" class="weeks-list">
+      <div 
+        *ngFor="let week of weeksInMonth" 
+        class="week-section">
+        
+        <div class="week-header">
+          <span class="week-label">{{ week.weekLabel }}</span>
+          <span class="week-task-count">{{ week.tasks.length }} task{{ week.tasks.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="tasks-list">
+          <div 
+            *ngFor="let task of week.tasks" 
+            class="task-item"
+            [class.task-completed]="task.completed">
+            
+            <div class="task-row">
+              <div class="task-main">
+                <h4 class="task-name">{{ task.name }}</h4>
+                <p *ngIf="task.description" class="task-description">
+                  {{ task.description }}
+                </p>
+              </div>
+
+              <div class="task-info">
+                <span class="status-badge" [class]="getStatusClass(task)">
+                  {{ getStatusLabel(task) }}
+                </span>
+                
+                <div class="task-meta">
+                  <span *ngIf="task.tag" 
+                    class="tag-badge" 
+                    [style.background-color]="task.tag.color + '20'" 
+                    [style.color]="task.tag.color">
+                    {{ task.tag.name }}
+                  </span>
+                  <span class="period-text">
+                    {{ task.startDate | date:'MMM d' }} - {{ task.endDate | date:'MMM d' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="task-progress">
+                <div class="progress-label">
+                  <span>{{ getProgressPercentage(task) | number:'1.0-0' }}%</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div 
+                    class="progress-bar-fill" 
+                    [style.width.%]="getProgressPercentage(task)"
+                    [class.completed]="task.completed">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="weeksInMonth.length > 0" class="tasks-summary">
+      <div class="summary-stats">
+        <span class="stat-item">
+          <strong>{{ totalTaskCount }}</strong> task{{ totalTaskCount !== 1 ? 's' : '' }}
+        </span>
+        <span class="stat-item">
+          <strong>{{ completedCount }}</strong> completed
+        </span>
+        <span class="stat-item">
+          <strong>{{ pendingCount }}</strong> pending
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

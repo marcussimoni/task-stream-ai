@@ -1,0 +1,8 @@
+<div class="toast" [class.toast-success]="toast.type === 'success'" [class.toast-error]="toast.type === 'error'" [class.toast-warning]="toast.type === 'warning'" [class.toast-info]="toast.type === 'info'" [class.toast-exiting]="isExiting">
+  <div class="toast-icon">{{ getIcon() }}</div>
+  <div class="toast-content">
+    <div *ngIf="toast.title" class="toast-title">{{ toast.title }}</div>
+    <div class="toast-message">{{ toast.message }}</div>
+  </div>
+  <button *ngIf="toast.dismissible !== false" class="toast-close" (click)="onCloseClick()" aria-label="Close">×</button>
+</div>
