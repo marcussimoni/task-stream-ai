@@ -9,7 +9,8 @@ author: AI / Developer
 A full-stack task management platform with AI-powered features, built with Kotlin Spring Boot and Angular.
 
 > **AI Development Sandbox** — This application serves as a test environment for (1) AI-assisted software development, demonstrating AI pair programming capabilities, and (2) LLM integration via Spring AI 2 with local Ollama models.
-> **Security Note** — This is a personal study project with minimal security features. Not intended for production use.
+
+> ***Security Note — This is a personal study project with minimal security features. Not intended for production use.***
 
 ## Overview
 
@@ -18,9 +19,9 @@ TaskStream AI is a productivity platform for managing tasks, tracking time, and 
 **Target Audience:** Users seeking structured task management with scheduling and productivity insights; developers exploring AI-assisted development workflows.
 
 ## Security Note
-This is a personal study project. Security features like authentication, 
+> ***This is a personal study project. Security features like authentication, 
 authorization, and input sanitization are intentionally minimal for simplicity. 
-Not intended for production use or multi-user environments.
+Not intended for production use or multi-user environments.***
 
 ## Features
 
