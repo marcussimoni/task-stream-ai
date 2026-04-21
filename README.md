@@ -8,7 +8,9 @@ author: AI / Developer
 
 A full-stack task management platform with AI-powered features, built with Kotlin Spring Boot and Angular.
 
-> **AI Development Sandbox** — This application serves as a test environment for (1) AI-assisted software development, demonstrating AI pair programming capabilities, and (2) LLM integration via Spring AI 2 with local Ollama models.
+> **AI Development Sandbox** — This application serves as a test environment for:
+> * (1) AI-assisted software development, demonstrating AI pair programming capabilities 
+> * (2) LLM integration via Spring AI 2 with local Ollama models.
 
 > ***Security Note — This is a personal study project with minimal security features. Not intended for production use.***
 
