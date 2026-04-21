@@ -1,0 +1,51 @@
+{
+  "name": "task-stream-ai-app",
+  "version": "0.0.4",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder build --mac",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^41.2.1",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "br.com.taskstream",
+    "productName": "TaskStream AI",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "dist/**/*",
+      "splash.html",
+      "loading.gif"
+    ],
+    "extraResources": [
+      {
+        "from": "builds/task-stream-ai",
+        "to": "backend-binary"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "icons/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "target": "dmg",
+      "extraResources": [
+        {
+          "from": "builds/task-stream-ai",
+          "to": "backend-binary"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+#root
+
+.idea
+data
+backups/*
+target
+.DS_STORE
+build.sh
+
+#backend
+
+src/main/resources/static
+pom.xml.versionsBackup
