@@ -150,7 +150,7 @@ Backend runs at: `http://localhost:8080`
 
 **H2 Console (Development):**
 - URL: `http://localhost:8080/h2-console`
-- JDBC URL: `jdbc:h2:file:~/data/h2/trackdailyapp`
+- JDBC URL: `jdbc:h2:file:~/data/h2/dailytrack` (old database name, kept for compatibility)
 - Username: `sa`
 - Password: `password`
 

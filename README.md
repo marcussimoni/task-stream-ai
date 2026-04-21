@@ -1,143 +1,144 @@
-# Task Stream AI - Study Tracking & Task Management Platform
+---
+version: 1.0.0
+last_updated: 2026-04-21
+author: AI / Developer
+---
 
-A full-stack Kotlin Spring Boot + Angular application for tracking daily study activities, habits, tasks, and achievements with AI-powered features.
+# TaskStream AI
+
+A full-stack task management platform with AI-powered features, built with Kotlin Spring Boot and Angular.
+
+> **AI Development Sandbox** — This application serves as a test environment for (1) AI-assisted software development, demonstrating AI pair programming capabilities, and (2) LLM integration via Spring AI 2 with local Ollama models.
 
 ## Overview
 
-This is a comprehensive productivity platform that helps users track their study habits, manage tasks, and visualize their progress through interactive dashboards and analytics.
+TaskStream AI is a productivity platform for managing tasks, tracking time, and visualizing progress. It provides a weekly calendar for scheduling, tag-based organization, metrics dashboards, and optional AI features via Ollama integration. The application can run as a web service or be packaged as a native desktop app.
 
-## Requirements
-
-### Prerequisites
-- **Java 24+**
-- **Maven 3.6+**
-- **Node.js 18+** (for frontend)
-- **H2 Database** (embedded, no separate installation needed)
-- **Ollama** (optional, for AI features)
-- **GraalVM 24+** (optional, for native compilation)
-- **Electron** (optional, for desktop app)
-
-### Tech Stack
-
-**Backend:**
-- **Language**: Kotlin 2.2.21
-- **Framework**: Spring Boot 4.1.0-M4
-- **Database**: H2 (embedded)
-- **Migrations**: Flyway
-- **ORM**: Spring Data JPA (Hibernate)
-- **AI Integration**: Spring AI with Ollama support
-
-**Frontend:**
-- **Framework**: Angular 21.2.7
-- **Language**: TypeScript 5.9.3
-- **Charts**: Chart.js 4.5.1 + ng2-charts 10.0.0
-- **Styling**: CSS with responsive layouts
-- **Icons**: FontAwesome 7.2.0
-
-## Quick Start
-
-Ensure all prerequisites were installed before building the project and mvn, npm and graalvm are in PATH.
-
-Building the entire project as Mac dmg file, run the following command at root directory of this project:
-````
-sh build.sh
-````
-
-After completed, a new dmg file will be created at `desktop-app/release` folder.
-
-The build time is approximately from 10 to 15 minutes.
+**Target Audience:** Users seeking structured task management with scheduling and productivity insights; developers exploring AI-assisted development workflows.
 
 ## Features
 
-### Core Features
+| Feature | Description |
+|---------|-------------|
+| **Task Management** | CRUD operations with priorities (Low, Medium, High, Critical) and progress tracking |
+| **Tag System** | Color-coded tags for task categorization and filtering |
+| **Weekly Calendar** | Schedule tasks in a Monday-Sunday view with multi-tag and multi-day assignment |
+| **Monthly Overview** | Task summaries grouped by week with navigation |
+| **Metrics Dashboard** | Visual charts showing task completion by tag and time period |
+| **Database Backup** | On-demand backup and restore via admin panel |
+| **AI Integration** | Optional Ollama integration for AI-powered features |
 
-#### Task Management
-- Create, read, update, and delete tasks
-- **Task Priority Levels**: Low, Medium, High, Critical with color-coded badges
-- Categorize tasks by type (Study, Work, Health, etc.)
-- Tag tasks with multiple customizable tags
-- Track progress with current/target values
-- Mark tasks as complete/incomplete
+## Architecture
 
-#### Tags & Task Types
-- Create custom tags with colors for visual organization
-- Create task types with icons
-- Search tags by name
-- Filter tasks by tag or type
+### Tech Stack
 
-#### Metrics Dashboard
-- **Weekly/Monthly Metrics**: View study time, sessions, habit completion rates
-- **Task Metrics by Tag**: Bar chart visualization showing completed vs pending tasks grouped by tag
-- Tabs interface to switch between Task metrics and Other metrics
+| Component | Technology |
+|-----------|------------|
+| Backend | Kotlin 2.2.21, Spring Boot 4.1.0-M4 |
+| Frontend | Angular 21.2.7, TypeScript 5.9.3 |
+| Database | H2 (embedded) with Flyway migrations |
+| AI | Spring AI 2.0.0-M4, Ollama |
+| Desktop | Electron 41, GraalVM Native Image |
 
-### Advanced Features
+### Project Structure
 
-#### Monthly Overview
-- View all tasks grouped by week within a selected month
-- Month navigation (Previous/Current/Next)
-- Tasks sorted alphabetically within each week
-- Statistics summary (total, completed, pending counts)
-- Tasks appear in all weeks they overlap with
+```
+task-stream-ai/
+├── backend/           # Spring Boot REST API
+│   ├── src/main/kotlin/br/com/taskstreamai/
+│   └── README.md
+├── frontend/          # Angular web application
+│   └── README.md
+├── desktop-app/       # Electron desktop wrapper
+│   └── README.md
+└── spec/              # Feature specifications (PRDs)
+```
 
-#### Weekly Task Calendar
-- Week-based calendar view (Monday-Sunday, 8 AM - 10 PM)
-- Assign tags to specific day/hour slots
-- **Multi-Tag Support**: Assign multiple tags to a single time slot
-- **Multi-Day Assignment**: Assign tags to multiple days simultaneously
-- Automatic task loading: Shows the highest priority incomplete task for assigned tags
-- Task selection algorithm prioritizes by priority level (Critical > High > Medium > Low), then by start date
-- Visual progress bars with color coding (green >70%, yellow 30-70%, red <30%)
-- Week navigation and "Today" button
+## Installation
 
-#### Database Backup & Restore
-- Admin panel for database management
-- Create on-demand backups (DB and SQL formats)
-- List all available backups with metadata
-- Restore from backup with confirmation dialog
-- Toast notifications for operation results
+### Prerequisites
 
-### AI Features
+- **Java 24+**
+- **Maven 3.6+**
+- **Node.js 18+**
+- **Ollama** for AI features
+- **GraalVM 24+** for native desktop build
 
-The application integrates **Spring AI** with **Ollama** for AI-powered capabilities:
+### Quick Start (Web Mode)
 
-- **AI Model Support**: Uses Ollama for local AI model execution
-- **Spring AI BOM**: Version 2.0.0-M4 for AI integration
-- **Starter Dependency**: `spring-ai-starter-model-ollama`
+1. Start the backend:
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
 
-*Note: AI features require Ollama to be installed and running locally.*
+2. Start the frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-## Feature Specifications (PRDs)
+3. Open `http://localhost:4200`
 
-Detailed specifications for each feature are available in the `/spec/features/` directory:
+### Desktop Build (macOS DMG)
 
-| Feature | PRD File |
-|---------|----------|
+Build everything with one command:
+```bash
+sh build.sh
+```
+
+Output: `desktop-app/release/TaskStream AI-x.x.x.dmg`
+
+**Build time:** ~10-15 minutes (includes GraalVM native compilation)
+
+## Usage
+
+### Data Storage
+
+All data is stored at `~/.task-stream-ai/`:
+- H2 database files
+- Backup exports
+- Application logs
+
+### Default Credentials
+
+**H2 Console:** `http://localhost:8080/h2-console`
+- JDBC URL: `jdbc:h2:file:~/data/h2/trackdailyapp`
+- Username: `sa`
+- Password: `password`
+
+### API Base URL
+
+`http://localhost:8080/api`
+
+See [backend/README.md](backend/README.md) for endpoint details.
+
+## Development
+
+### Module Documentation
+
+| Module | Description | README |
+|--------|-------------|--------|
+| Backend | REST API, database, AI integration | [backend/README.md](backend/README.md) |
+| Frontend | Angular UI components | [frontend/README.md](frontend/README.md) |
+| Desktop | Electron wrapper for native build | [desktop-app/README.md](desktop-app/README.md) |
+
+### Feature Specifications
+
+Detailed PRDs are located in `spec/features/`:
+
+| Feature | PRD |
+|---------|-----|
 | Monthly Overview | `monthly-overview-prd.md` |
-| Monthly Task Metrics | `monthly-task-metrics.md` |
-| Multi-Day Tag Assignment | `multi-day-tag-assignment.prd.md` |
-| Task Alarm Notification | `task-alarm-notification.prd.md` |
-| Task Priority Field | `task-priority-field.prd.md` |
-| Task Metrics Dashboard | `task-metrics-dashboard.prd.md` |
-| Tasks Weekly Grouping | `tasks-weekly-grouping-refactor.md` |
-| Toast Migration | `toast-migration-all-features.prd.md` |
-| Toast Notification System | `toast-notification.prd.md` |
-| Weekly Task Calendar | `weekly-task-calendar.prd.md` |
-| Database Backup & Restore | `database-backup-restore.prd.md` |
-| Footer Component | `footer-component-prd.md` |
+| Weekly Calendar | `weekly-task-calendar.prd.md` |
+| Task Metrics | `task-metrics-dashboard.prd.md` |
+| Database Backup | `database-backup-restore.prd.md` |
+| Task Alarms | `task-alarm-notification.prd.md` |
 
-## Data access
+## Screenshots
 
-All database data including the backups and H2 files can be found at $HOME/.task-stream-ai
-
-### Application structure
-
-The entire application is splited into 3 main projects:
-
-1. **backend** - Spring Boot backend application
-2. **desktop-app** - GraalVM native desktop application
-3. **frontend** - Angular frontend application
-
-You can find more details about each project in their respective README files:
-- [backend/README.md](backend/README.md)
-- [desktop-app/README.md](desktop-app/README.md)
-- [frontend/README.md](frontend/README.md)
+![Tasks](imgs/tasks.png)
+![Calendar](imgs/calendar.png)
+![Dashboard](imgs/dashboard.png)
+![Monthly Overview](imgs/monthly-overview.png)
