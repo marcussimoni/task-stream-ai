@@ -51,15 +51,32 @@ class SummarizeArticleService(
 
     }
 
-    fun loadSiteFromUrl(link: String) : Document {
+    fun loadSiteFromUrl(link: String): Document {
+        // Only allow HTTP/HTTPS
+        require(link.startsWith("http://") || link.startsWith("https://")) {
+            "Only HTTP/HTTPS URLs allowed"
+        }
+
+        // Basic private IP check
+        val lower = link.lowercase()
+        require(!lower.contains("localhost") &&
+                !lower.contains("127.0.0.1") &&
+                !lower.contains("192.168.") &&
+                !lower.contains("10.") &&
+                !lower.contains("172.16.")) {
+            "Private addresses not allowed"
+        }
+
         val baseDomain = extractDomainFromLink(link)
         return Jsoup
             .connect(link)
             .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:149.0) Gecko/20100101 Firefox/149.0")
             .referrer(baseDomain!!)
             .header("Accept-Language", "en-US,en;q=0.9")
+            .timeout(10000)
+            .maxBodySize(5 * 1024 * 1024)
             .followRedirects(true)
-            .get();
+            .get()
     }
 
     private fun extractDomainFromLink(link: String): String? {
