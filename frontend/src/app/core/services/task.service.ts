@@ -16,6 +16,10 @@ export class TaskService {
     return this.apiService.post<Task>(this.endpoint, task);
   }
 
+  createTasks(tasks: any[]): Observable<void> {
+    return this.apiService.post<void>(`${this.endpoint}/create-all`, tasks);
+  }
+
   getAllTasks(tag: number | null): Observable<Task[]> {
     let params = new HttpParams();
     if(tag){

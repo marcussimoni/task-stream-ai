@@ -4,9 +4,11 @@ import br.com.taskstreamai.config.SpringAiConfig
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.repository.TaskRepository
 import org.jsoup.Jsoup
+import org.jsoup.internal.StringUtil
 import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,10 +23,10 @@ class SummarizeArticleService(
     @Transactional
     fun createTaskSummary(task: TaskDTO) {
 
-        if (task.link != null) {
+        if (isValidLink(task.link)) {
 
             logger.info("Informed link: ${task.link}")
-            val site = loadSiteFromUrl(task.link)
+            val site = loadSiteFromUrl(task.link!!)
 
             val title = site.title()
             val content = cleanHtmlForAi(site)
@@ -33,9 +35,10 @@ class SummarizeArticleService(
 
             val summary = chatClient
                 .prompt()
-                .system(SpringAiConfig.PROMPT)
+                .system(SpringAiConfig.PROMPT_SUMMARY_ROLE)
                 .user(content)
-                .call().content()
+                .call()
+                .content()
 
             logger.info("Summary completed. Updating task: ${task.id}")
 
@@ -49,6 +52,10 @@ class SummarizeArticleService(
 
         }
 
+    }
+
+    private fun isValidLink(link: String?): Boolean {
+        return link != null && !StringUtil.isBlank(link) && (link.startsWith("http") || link.startsWith("https"))
     }
 
     fun loadSiteFromUrl(link: String): Document {

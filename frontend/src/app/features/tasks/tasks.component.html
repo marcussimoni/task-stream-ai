@@ -21,28 +21,32 @@
 
     <!-- Create Button -->
     <div class="create-button-section">
+      
       <button class="btn btn-primary" (click)="openModal()">
         + Create New Task
       </button>
-      <div>
-        <a class="btn btn-calendar" href="/weekly-calendar"><i class="fa-regular fa-calendar"></i>Weekly Calendar</a>
-        <button [class]="completedTasks() ? 'btn btn-secondary-true' : 'btn btn-secondary-false'" (click)="showCompletedTasks()">
-          <i class="fa-regular fa-eye" *ngIf="!completedTasks()"></i>
-          <i class="fa-regular fa-eye-slash" *ngIf="completedTasks()"></i>
-          {{ completedTasks() ? 'Hide completed tasks' : 'Show completed tasks' }}
-        </button>
-        <div class="tag-checkbox">
-          <select
-            id="tagId"
-            class="form-control"
-            (change)="onTagChange($event)"
-            [class.is-invalid]="taskForm.get('tagId')?.invalid && taskForm.get('tagId')?.touched">
-            <option value="">Filter by tag</option>
-            <option *ngFor="let tag of tags()" [value]="tag.id">
-              {{ tag.name }}
-            </option>
-          </select>
-        </div>
+      <button class="btn btn-ai" (click)="openAiModal()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Create with AI
+      </button>
+    </div>
+    <div class="search-components-section">
+      <a class="btn btn-calendar" href="/weekly-calendar"><i class="fa-regular fa-calendar"></i>Weekly Calendar</a>
+      <button [class]="completedTasks() ? 'btn btn-secondary-true' : 'btn btn-secondary-false'" (click)="showCompletedTasks()">
+        <i class="fa-regular fa-eye" *ngIf="!completedTasks()"></i>
+        <i class="fa-regular fa-eye-slash" *ngIf="completedTasks()"></i>
+        {{ completedTasks() ? 'Hide completed tasks' : 'Show completed tasks' }}
+      </button>
+      <div class="tag-checkbox">
+        <select
+          id="tagId"
+          class="form-control"
+          (change)="onTagChange($event)"
+          [class.is-invalid]="taskForm.get('tagId')?.invalid && taskForm.get('tagId')?.touched">
+          <option value="">Filter by tag</option>
+          <option *ngFor="let tag of tags()" [value]="tag.id">
+            {{ tag.name }}
+          </option>
+        </select>
       </div>
     </div>
 
@@ -70,7 +74,7 @@
             *ngFor="let task of week.tasks" 
             [ngClass]="task.completed ? 'task-item-completed' : 'task-item'">
             <div class="task-header">
-              <a (click)="editTask(task)" title="Open Task" class="title-link"><h4>{{ task.name }}</h4></a>
+              <a (click)="editTask(task)" title="Open Task" class="title-link"><h4>{{ task.id }} - {{ task.name }}</h4></a>
               <div class="task-actions">
                 <span *ngIf="task.link">
                   <a [href]="task.link" target="_blank" class="btn btn-sm btn-outline-link" [title]="task.link">site</a>    
@@ -160,16 +164,16 @@
               (change)="loadLinkContent()">
           </div>
 
-          <div class="form-flex-group">
-            <label for="description">Description</label>
-            <input 
-              type="text"
-              id="description" 
-              class="form-control" 
-              formControlName="description"
-              placeholder="Describe your task">
-          </div>
+        </div>
 
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+          cols="2"
+          id="description" 
+          class="form-control" 
+          formControlName="description"
+          placeholder="Describe your task"></textarea>
         </div>
 
         <div class="line"></div>
@@ -295,6 +299,158 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- AI Task Modal - Two Step Flow -->
+<div *ngIf="showAiModal()" class="modal-overlay" (click)="closeAiModal()">
+  <div class="modal-content ai-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create Task with AI</h3>
+      <button class="close-btn" (click)="closeAiModal()" [disabled]="isGeneratingTasks() || isCreatingTasks()">&times;</button>
+    </div>
+    
+    <!-- Step 1: Prompt Input -->
+    <div *ngIf="aiModalStep() === 1" class="modal-body">
+      <div class="form-group">
+        <label for="aiPrompt">Describe the task you want to create:</label>
+        <textarea
+          id="aiPrompt"
+          class="form-control"
+          rows="6"
+          [value]="aiPrompt()"
+          (input)="onAiPromptChange($any($event).target.value)"
+          placeholder="Describe your task in natural language, e.g., 'Create a high priority task to review the quarterly report by next Friday'"
+          [disabled]="isGeneratingTasks()"
+          autofocus>
+        </textarea>
+      </div>
+    </div>
+    
+    <!-- Step 2: Task Preview & Edit -->
+    <div *ngIf="aiModalStep() === 2" class="modal-body">
+      <!-- Original prompt (read-only) -->
+      <div class="form-group">
+        <label>Original prompt:</label>
+        <div class="prompt-display">
+          {{ aiPrompt() }}
+        </div>
+      </div>
+      
+      <!-- Generated Tasks -->
+      <div class="generated-tasks-section">
+        <h4>Generated Tasks ({{ generatedTasks().length }})</h4>
+        
+        <div *ngFor="let task of generatedTasks(); let i = index; trackBy: trackByTaskIndex" class="task-preview-card">
+          <div class="task-preview-header">
+            <span class="task-number">Task {{ i + 1 }}</span>
+          </div>
+          
+          <div class="task-preview-fields">
+            <div class="form-group">
+              <label [for]="'task-name-' + i">Task Name *</label>
+              <input
+                [id]="'task-name-' + i"
+                type="text"
+                class="form-control"
+                [(ngModel)]="task.name"
+                (blur)="updateTask(i, 'name', $any($event).target.value)"
+                placeholder="Enter task name">
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label [for]="'task-tag-' + i">Tag *</label>
+                <select
+                  [id]="'task-tag-' + i"
+                  class="form-control"
+                  [(ngModel)]="task.tagId"
+                  (ngModelChange)="updateTask(i, 'tagId', $event)">
+                  <option [ngValue]="null">Select a tag</option>
+                  <option *ngFor="let tag of tags()" [ngValue]="tag.id">
+                    {{ tag.name }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label [for]="'task-priority-' + i">Priority *</label>
+                <select
+                  [id]="'task-priority-' + i"
+                  class="form-control"
+                  [(ngModel)]="task.priority"
+                  (ngModelChange)="updateTask(i, 'priority', $event)">
+                  <option [ngValue]="null">Select priority</option>
+                  <option *ngFor="let priority of priorities" [ngValue]="priority">
+                    {{ getPriorityLabel(priority) }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label [for]="'task-start-' + i">Start Date *</label>
+                <input
+                  [id]="'task-start-' + i"
+                  type="date"
+                  class="form-control"
+                  [(ngModel)]="task.startDate"
+                  (ngModelChange)="updateTask(i, 'startDate', $event)">
+              </div>
+              
+              <div class="form-group">
+                <label [for]="'task-end-' + i">End Date *</label>
+                <input
+                  [id]="'task-end-' + i"
+                  type="date"
+                  class="form-control"
+                  [(ngModel)]="task.endDate"
+                  (ngModelChange)="updateTask(i, 'endDate', $event)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 1 Footer -->
+    <div *ngIf="aiModalStep() === 1" class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeAiModal()" [disabled]="isGeneratingTasks()">
+        <i class="fa-solid fa-xmark"></i>
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="generateTasks()"
+        [disabled]="!aiPrompt().trim() || isGeneratingTasks()">
+        <i class="fa-solid fa-wand-magic-sparkles" *ngIf="!isGeneratingTasks()"></i>
+        <i class="fa-solid fa-spinner fa-spin" *ngIf="isGeneratingTasks()"></i>
+        {{ isGeneratingTasks() ? 'Generating. It might take a while...' : 'Generate Tasks' }}
+      </button>
+    </div>
+    
+    <!-- Step 2 Footer -->
+    <div *ngIf="aiModalStep() === 2" class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="goBackToStep1()" [disabled]="isCreatingTasks()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeAiModal()" [disabled]="isCreatingTasks()">
+        <i class="fa-solid fa-xmark"></i>
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-success"
+        (click)="confirmTasks()"
+        [disabled]="isCreatingTasks()">
+        <i class="fa-solid fa-check" *ngIf="!isCreatingTasks()"></i>
+        <i class="fa-solid fa-spinner fa-spin" *ngIf="isCreatingTasks()"></i>
+        {{ isCreatingTasks() ? 'Creating...' : 'Confirm Creation' }}
+      </button>
     </div>
   </div>
 </div>

@@ -1,15 +1,14 @@
 package br.com.taskstreamai.repository
 
-import br.com.taskstreamai.dto.MonthlyTaskMetricsDTO
 import br.com.taskstreamai.dto.TaskMetricsDTO
-import br.com.taskstreamai.model.Task
 import br.com.taskstreamai.model.Tag
+import br.com.taskstreamai.model.Task
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
-import java.util.Optional
+import java.util.*
 
 @Repository
 interface TaskRepository : JpaRepository<Task, Long> {
@@ -55,4 +54,12 @@ interface TaskRepository : JpaRepository<Task, Long> {
         order by tag
         """, nativeQuery = true)
     fun monthlyTasks(@Param("startDate") startDate: LocalDate, @Param("endDate") endDate: LocalDate): List<TaskMetricsDTO>
+
+    @Query(value = """
+        select t.* from tasks t
+        where t.summary is not null
+        and t.description is not null
+        limit :total;
+    """, nativeQuery = true)
+    fun findTaskByDates(@Param("total") total: Int): List<Task>
 }

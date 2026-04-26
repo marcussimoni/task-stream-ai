@@ -1,6 +1,8 @@
 package br.com.taskstreamai.dto
 
 import br.com.taskstreamai.model.Priority
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -8,7 +10,7 @@ data class TaskDTO(
     val id: Long,
     val name: String,
     val description: String,
-    val currentValue: Int,
+    val currentValue: Int = 0,
     val startDate: LocalDate?,
     val endDateInterval: Int?,
     val endDate: LocalDate?,
@@ -23,16 +25,36 @@ data class TaskDTO(
 )
 
 data class TaskRequestDTO(
-    val name: String,
+    @JsonProperty("name")
+    @JsonPropertyDescription("The concise name or title of the task. THIS IS MANDATORY.")
+    val name: String = "New Task", // 1. Added default value to prevent the crash
+    @JsonProperty("description")
+    @JsonPropertyDescription("Detailed description of the task")
     val description: String = "",
+    @JsonProperty("currentValue")
+    @JsonPropertyDescription("Numeric value representing the task importance or current progress")
     val currentValue: Int = 0,
+    @JsonProperty("startDate")
+    @JsonPropertyDescription("The start date in YYYY-MM-DD format")
     val startDate: LocalDate = LocalDate.now(),
-    val endDateInterval: Int? = null,
+    @JsonProperty("endDateInterval")
+    @JsonPropertyDescription("The number of days from start until deadline")
+    val endDateInterval: Int = 1,
+    @JsonProperty("endDate")
+    @JsonPropertyDescription("The specific deadline date in YYYY-MM-DD format")
     var endDate: LocalDate? = null,
+    @JsonProperty("completed")
     val completed: Boolean = false,
-    val tagId: Long,
-    val customEndDateSelected: Boolean,
+    @JsonProperty("tagId")
+    @JsonPropertyDescription("The numeric database ID for the selected tag")
+    val tagId: Long = 0L, // 2. Added default to avoid null issues
+    @JsonProperty("customEndDateSelected")
+    @JsonPropertyDescription("Set to true if a specific end date was provided by the user")
+    val customEndDateSelected: Boolean = false,
+    @JsonProperty("priority")
+    @JsonPropertyDescription("The priority level: LOW, MEDIUM, or HIGH")
     val priority: Priority = Priority.MEDIUM,
+    @JsonProperty("link")
     val link: String? = null
 )
 
@@ -50,4 +72,8 @@ data class TaskQueryParamsDTO(
 
 data class LinkContentDTO(
     val title: String
+)
+
+data class AutomatedTaskDTO(
+    val input: String
 )

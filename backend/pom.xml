@@ -12,7 +12,7 @@
 	<artifactId>task-stream-ai</artifactId>
 	<name>Task Stream AI</name>
 	<description>Intelligent Task Manager Powered by AI</description>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.5-SNAPSHOT</version>
 	<url/>
 	<licenses>
 		<license/>

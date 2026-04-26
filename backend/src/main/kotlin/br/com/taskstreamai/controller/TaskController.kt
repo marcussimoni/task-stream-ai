@@ -1,5 +1,6 @@
 package br.com.taskstreamai.controller
 
+import br.com.taskstreamai.dto.AutomatedTaskDTO
 import br.com.taskstreamai.dto.LinkContentDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskQueryParamsDTO
@@ -21,6 +22,11 @@ class TaskController(
     fun createTask(@Valid @RequestBody requestDTO: TaskRequestDTO): ResponseEntity<TaskDTO> {
         val createdTask = taskService.createTask(requestDTO)
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask)
+    }
+
+    @PostMapping("/create-all")
+    fun createTasks(@Valid @RequestBody requestDTO: List<TaskRequestDTO>) {
+        taskService.createTasks(requestDTO)
     }
     
     @GetMapping

@@ -30,6 +30,13 @@ class TaskService(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
+    fun createTasks(tasks: List<TaskRequestDTO>) {
+        serviceScope.launch {
+            logger.info("Creating tasks: ${tasks.size}")
+            tasks.forEach { task -> createTask(task) }
+        }
+    }
+
     fun createTask(requestDTO: TaskRequestDTO): TaskDTO {
         val tag = tagRepository.findById(requestDTO.tagId)
             .orElseThrow { ResourceNotFoundException("Tag not found with id: ${requestDTO.tagId}") }
@@ -39,7 +46,9 @@ class TaskService(
         }
 
         val task = TaskMapper.toEntity(requestDTO, tag)
+
         val savedTask = taskRepository.save(task)
+        logger.info("Task ${task.id} - ${task.name} created")
 
         val taskDto = TaskMapper.toDTO(savedTask)
 
@@ -50,7 +59,6 @@ class TaskService(
         return taskDto
     }
 
-    
     fun getTaskById(id: Long): TaskDTO {
         val task = findById(id);
         return TaskMapper.toDTO(task)
@@ -145,6 +153,12 @@ class TaskService(
         val site = summarizeArticleService.loadSiteFromUrl(url)
         logger.info("Link content for url: ${site.title()}")
         return LinkContentDTO(site.title())
+    }
+
+    fun getLastTasks(total: Int): List<TaskDTO> {
+        val tasks = taskRepository.findTaskByDates(total)
+        val tasksTemplate = tasks.map { TaskMapper.toDTO(it) }
+        return tasksTemplate
     }
 
 }

@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, signal, SecurityContext, computed } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-import { TaskService, TagService } from '../../core';
+import { TaskService, TagService, AiAssistantService } from '../../core';
 import { Task, Tag, Priority, PriorityConfig } from '../../core/models';
+import { TaskRequestDTO } from '../../core/interfaces/task-request-dto';
 import { ToastService } from '../../shared/services/toast.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { marked } from 'marked';
@@ -19,7 +20,7 @@ interface WeekGroup {
   selector: 'app-tasks',
   templateUrl: './tasks.component.html',
   styleUrls: ['./tasks.component.css'],
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, DecimalPipe]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, DecimalPipe]
 })
 export class TasksComponent implements OnInit {
   // Signals for state management
@@ -43,21 +44,43 @@ export class TasksComponent implements OnInit {
   // UI state signals
   private isEditingState = signal<boolean>(false);
   readonly isEditing = computed(() => this.isEditingState());
-  
+
   private editingTaskIdState = signal<number | null>(null);
   readonly editingTaskId = computed(() => this.editingTaskIdState());
-  
+
   private showModalState = signal<boolean>(false);
   readonly showModal = computed(() => this.showModalState());
-  
+
   private completedTasksState = signal<boolean>(false);
   readonly completedTasks = computed(() => this.completedTasksState());
-  
+
   private selectedTagState = signal<number | null>(null);
   readonly selectedTag = computed(() => this.selectedTagState());
-  
+
   private summaryMarkdownState = signal<string>('');
   readonly summaryMarkdown = computed(() => this.summaryMarkdownState());
+
+  // AI modal state signals
+  private showAiModalState = signal<boolean>(false);
+  readonly showAiModal = computed(() => this.showAiModalState());
+
+  private aiModalStepState = signal<1 | 2>(1);
+  readonly aiModalStep = computed(() => this.aiModalStepState());
+
+  private aiPromptState = signal<string>('');
+  readonly aiPrompt = computed(() => this.aiPromptState());
+
+  private generatedTasksState = signal<TaskRequestDTO[]>([]);
+  readonly generatedTasks = computed(() => this.generatedTasksState());
+
+  private isGeneratingTasksState = signal<boolean>(false);
+  readonly isGeneratingTasks = computed(() => this.isGeneratingTasksState());
+
+  private isCreatingTasksState = signal<boolean>(false);
+  readonly isCreatingTasks = computed(() => this.isCreatingTasksState());
+
+  private isSubmittingAiState = signal<boolean>(false);
+  readonly isSubmittingAi = computed(() => this.isSubmittingAiState());
   
   taskForm: FormGroup;
   priorities = Object.values(Priority);
@@ -66,6 +89,7 @@ export class TasksComponent implements OnInit {
   private fb = inject(FormBuilder);
   private taskService = inject(TaskService);
   private tagService = inject(TagService);
+  private aiAssistantService = inject(AiAssistantService);
   private toastService = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -448,6 +472,105 @@ export class TasksComponent implements OnInit {
   private summaryAsMarkdown(task: Task) {
     const markdownSummary = marked.parse(task.summary || '') as string
     this.summaryMarkdownState.set(this.sanitizer.sanitize(SecurityContext.HTML, markdownSummary) ?? '');
+  }
+
+  private extractErrorMessage(error: any, defaultMessage: string = 'An error occurred'): string {
+    return error.error?.message || error.error?.error || error.message || defaultMessage;
+  }
+
+  // AI Modal Methods
+  openAiModal(): void {
+    this.showAiModalState.set(true);
+    this.aiModalStepState.set(1);
+    this.aiPromptState.set('');
+    this.generatedTasksState.set([]);
+  }
+
+  closeAiModal(): void {
+    if (!this.isGeneratingTasksState() && !this.isCreatingTasksState()) {
+      this.showAiModalState.set(false);
+    }
+  }
+
+  onAiPromptChange(value: string): void {
+    this.aiPromptState.set(value);
+  }
+
+  generateTasks(): void {
+    const prompt = this.aiPromptState().trim();
+    if (!prompt) {
+      return;
+    }
+
+    this.isGeneratingTasksState.set(true);
+
+    this.aiAssistantService.generateTasks(prompt).subscribe({
+      next: (tasks) => {
+        this.generatedTasksState.set(tasks);
+        this.aiModalStepState.set(2);
+        this.toastService.success('Tasks generated successfully! Review and edit before confirming.');
+        this.isGeneratingTasksState.set(false);
+      },
+      error: (error) => {
+        const message = this.extractErrorMessage(error);
+        this.toastService.error(message, 'Error');
+        this.isGeneratingTasksState.set(false);
+      }
+    });
+  }
+
+  confirmTasks(): void {
+    const tasks = this.generatedTasksState();
+    if (!tasks || tasks.length === 0) {
+      return;
+    }
+
+    this.isCreatingTasksState.set(true);
+
+    this.taskService.createTasks(tasks).subscribe({
+      next: () => {
+        this.toastService.success('Tasks submitted for creation successfully!');
+        this.isCreatingTasksState.set(false);
+        this.closeAiModal();
+        this.loadTasksForMonth(); // Refresh the task list
+      },
+      error: (error: any) => {
+        const message = this.extractErrorMessage(error);
+        this.toastService.error(message, 'Error');
+        this.isCreatingTasksState.set(false);
+      }
+    });
+  }
+
+  updateTask(index: number, field: keyof TaskRequestDTO, value: any): void {
+    const tasks = this.generatedTasksState();
+    const updatedTask = { ...tasks[index], [field]: value };
+    
+    // Create a new array but preserve the reference for non-updated items
+    const newTasks = tasks.map((task, i) => 
+      i === index ? updatedTask : task
+    );
+    
+    this.generatedTasksState.set(newTasks);
+  }
+
+  goBackToStep1(): void {
+    this.aiModalStepState.set(1);
+  }
+
+  // Helper method for template number conversion
+  toNumber(value: string): number {
+    return parseInt(value, 10) || 0;
+  }
+
+  // TrackBy function to prevent unnecessary re-renders
+  trackByTaskIndex(index: number, task: TaskRequestDTO): number {
+    return index;
+  }
+
+  // Legacy method for backward compatibility
+  submitAiTask(): void {
+    this.generateTasks();
   }
 
 }

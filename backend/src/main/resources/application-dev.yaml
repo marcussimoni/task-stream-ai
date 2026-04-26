@@ -25,16 +25,19 @@ spring:
 
 logging:
   file:
-    name: ./data/logs/task-stream-ai.log
+    name: ${user.home}/.task-stream-ai-dev/logs/task-stream-ai.log
   level:
     br:
       com:
         taskstreamai: DEBUG
+    org:
+      springframework:
+        ai: DEBUG
 
 database:
   backup:
     base-path: ./data/backups
 
 application:
-  start-alarm-scheduler: "0 */1 * * * *"
+  start-alarm-scheduler: "0 */10 * * * *"
   start-database-backup-scheduler: "0 0 10 * * *"

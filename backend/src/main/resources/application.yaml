@@ -30,9 +30,9 @@ spring:
   ai:
     ollama:
       base-url: http://localhost:11434
-      chat:
-        options:
-          model: llama3.2:3b
+#      chat:
+#        options:
+#          model: llama3.2:3b
   mvc:
     throw-exception-if-no-handler-found: false
 

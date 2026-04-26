@@ -41,6 +41,7 @@ Not intended for production use or multi-user environments.***
 | Feature | Description |
 |---------|-------------|
 | **AI-Powered Summary** | Generate summaries of websites and blog posts linked to tasks |
+| **AI Task Creation** | Create tasks using natural language prompts via AI assistance |
 
 
 ## Architecture
@@ -150,6 +151,7 @@ Detailed PRDs are located in `spec/features/`:
 | Task Metrics | `task-metrics-dashboard.prd.md` |
 | Database Backup | `database-backup-restore.prd.md` |
 | Task Alarms | `task-alarm-notification.prd.md` |
+| Create Task with AI | `create-task-with-ai.md` |
 
 ## Screenshots
 
