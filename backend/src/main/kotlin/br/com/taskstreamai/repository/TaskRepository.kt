@@ -1,6 +1,8 @@
 package br.com.taskstreamai.repository
 
+import br.com.taskstreamai.dto.TaskGroupedByTagDTO
 import br.com.taskstreamai.dto.TaskMetricsDTO
+import br.com.taskstreamai.dto.TasksByTagDTO
 import br.com.taskstreamai.model.Tag
 import br.com.taskstreamai.model.Task
 import org.springframework.data.jpa.repository.JpaRepository
@@ -62,4 +64,23 @@ interface TaskRepository : JpaRepository<Task, Long> {
         limit :total;
     """, nativeQuery = true)
     fun findTaskByDates(@Param("total") total: Int): List<Task>
+
+    @Query("""
+        select tag.id, tag.name as tag, count(task.id) as total from TASKS task inner join TAGS tag on task.tag_id = tag.id
+        where (task.start_date between :startDate and :endDate)
+        and (task.end_date between :startDate and :endDate)
+        group by tag.name
+        order by total desc
+        """, nativeQuery = true)
+    fun countTasksByTag(@Param("startDate") startDate: LocalDate, @Param("endDate") endDate: LocalDate): List<TaskGroupedByTagDTO>
+
+    @Query("""
+        select task.id, task.name as task, task.description, task.start_date as startDate, task.end_date as endDate, tag.name as tag, task.priority, task.completed, task.current_value as currentvalue from TASKS task inner join TAGS tag on task.tag_id = tag.id
+        where (task.start_date between :startDate and :endDate)
+        and (task.end_date between :startDate and :endDate)
+        and tag.id = :tagId
+        order by task.start_date asc
+    """, nativeQuery = true)
+    fun getTasksByTagAndDate(@Param("startDate") startDate: LocalDate, @Param("endDate") endDate: LocalDate, @Param("tagId") tagId: Long): List<TasksByTagDTO>
+
 }

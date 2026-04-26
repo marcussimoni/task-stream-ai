@@ -77,3 +77,27 @@ data class LinkContentDTO(
 data class AutomatedTaskDTO(
     val input: String
 )
+
+data class TaskGroupedByTagDTO(
+    val id: Long,
+    val tag: String,
+    val total: Long
+)
+
+data class TasksByTagDTO(
+    val id: Long,
+    val task: String,
+    val description: String,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val tag: String,
+    val priority: String,
+    val completed: Boolean,
+    val currentValue: Int,
+)
+
+data class TasksGroupedDTO(
+    val tag: String,
+    val total: Long,
+    val tasks: List<TasksByTagDTO>
+)

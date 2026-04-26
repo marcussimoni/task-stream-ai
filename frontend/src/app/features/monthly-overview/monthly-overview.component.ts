@@ -1,14 +1,16 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { TaskService } from '../../core';
-import { Task } from '../../core/models';
+import { TasksGroupedDTO, TasksByTagDTO, Priority } from '../../core/models';
 import { ToastService } from '../../shared/services/toast.service';
 
-interface WeekGroup {
-  weekStart: Date;
-  weekEnd: Date;
-  weekLabel: string;
-  tasks: Task[];
+interface TagGroup {
+  tagName: string;
+  taskCount: number;
+  completedCount: number;
+  pendingCount: number;
+  tasks: TasksByTagDTO[];
+  isExpanded: boolean;
 }
 
 @Component({
@@ -18,8 +20,8 @@ interface WeekGroup {
   imports: [CommonModule, DatePipe, DecimalPipe]
 })
 export class MonthlyOverviewComponent implements OnInit {
-  weeksInMonth: WeekGroup[] = [];
-  allTasks: Task[] = [];
+  private tagsInMonth = signal<TagGroup[]>([]);
+  readonly tagsInMonthList = this.tagsInMonth.asReadonly();
   
   currentMonth: Date = new Date();
   monthLabel: string = '';
@@ -27,9 +29,6 @@ export class MonthlyOverviewComponent implements OnInit {
   totalTaskCount = 0;
   completedCount = 0;
   pendingCount = 0;
-  
-  sortField: 'name' | 'tag' = 'name';
-  sortDirection: 'asc' | 'desc' = 'asc';
 
   private toastService = inject(ToastService);
 
@@ -66,91 +65,29 @@ export class MonthlyOverviewComponent implements OnInit {
     return new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
   }
 
-  calculateWeeksInMonth(): WeekGroup[] {
-    const monthStart = this.getMonthStart();
-    const monthEnd = this.getMonthEnd();
-    const weeks: WeekGroup[] = [];
-
-    // Find the first Monday of or before the month start
-    let currentWeekStart = new Date(monthStart);
-    const dayOfWeek = currentWeekStart.getDay();
-    const diff = currentWeekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    currentWeekStart.setDate(diff);
-    currentWeekStart.setHours(0, 0, 0, 0);
-
-    // Generate week buckets until we pass the month end
-    while (currentWeekStart <= monthEnd) {
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(currentWeekStart.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-      const startStr = currentWeekStart.toLocaleDateString('en-US', options);
-      const endStr = weekEnd.toLocaleDateString('en-US', options);
-
-      weeks.push({
-        weekStart: new Date(currentWeekStart),
-        weekEnd: new Date(weekEnd),
-        weekLabel: `${startStr} - ${endStr}`,
-        tasks: []
-      });
-
-      // Move to next week
-      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-    }
-
-    return weeks;
-  }
-
-  distributeTasksIntoWeeks(tasks: Task[], weeks: WeekGroup[]): WeekGroup[] {
-    return weeks.map(week => {
-      const weekTasks = tasks.filter(task => {
-        const taskStartDate = task.startDate ? new Date(task.startDate) : null;
-        const taskEndDate = task.endDate ? new Date(task.endDate) : null;
-        
-        if (!taskStartDate || !taskEndDate) {
-          return false;
-        }
-        
-        // Task overlaps with week if: taskStart <= weekEnd AND taskEnd >= weekStart
-        return taskStartDate <= week.weekEnd && taskEndDate >= week.weekStart;
-      });
-
+  private mapToTagGroups(groupedTasks: TasksGroupedDTO[]): TagGroup[] {
+    return groupedTasks.map(group => {
+      const completedCount = group.tasks.filter(task => task.completed).length;
+      const pendingCount = group.tasks.filter(task => !task.completed).length;
+      
       return {
-        ...week,
-        tasks: this.sortTasks(weekTasks)
+        tagName: group.tag,
+        taskCount: group.total,
+        completedCount: completedCount,
+        pendingCount: pendingCount,
+        tasks: group.tasks,
+        isExpanded: false // All tags collapsed by default
       };
-    }).filter(week => week.tasks.length > 0);
-  }
-
-  sortTasks(tasks: Task[]): Task[] {
-    return [...tasks].sort((a, b) => {
-      let comparison = 0;
-      
-      if (this.sortField === 'name') {
-        comparison = a.name.localeCompare(b.name);
-      } else if (this.sortField === 'tag') {
-        const tagA = a.tag?.name || '';
-        const tagB = b.tag?.name || '';
-        comparison = tagA.localeCompare(tagB);
-      }
-      
-      return this.sortDirection === 'asc' ? comparison : -comparison;
     });
   }
 
   loadTasksForMonth(): void {
-    const monthStart = this.getMonthStart();
-    const monthEnd = this.getMonthEnd();
+    const monthString = this.formatMonthForApi();
     
-    const startDate = this.formatDateForApi(monthStart);
-    const endDate = this.formatDateForApi(monthEnd);
-    
-    this.taskService.getTasksForMonth(startDate, endDate).subscribe({
-      next: (tasks: Task[]) => {
-        this.allTasks = tasks;
-        const weeks = this.calculateWeeksInMonth();
-        this.weeksInMonth = this.distributeTasksIntoWeeks(tasks, weeks);
+    this.taskService.getGroupedTasksByTags(monthString).subscribe({
+      next: (groupedTasks: TasksGroupedDTO[]) => {
+        const tagGroups = this.mapToTagGroups(groupedTasks);
+        this.tagsInMonth.set(tagGroups);
         this.updateStats();
         this.cdr.detectChanges();
       },
@@ -179,25 +116,32 @@ export class MonthlyOverviewComponent implements OnInit {
     this.loadTasksForMonth();
   }
 
-  setSort(field: 'name' | 'tag'): void {
-    if (this.sortField === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDirection = 'asc';
-    }
-    // Re-distribute and sort tasks
-    const weeks = this.calculateWeeksInMonth();
-    this.weeksInMonth = this.distributeTasksIntoWeeks(this.allTasks, weeks);
-    this.cdr.detectChanges();
+  toggleTagExpansion(tagName: string): void {
+    const currentTags = this.tagsInMonth();
+    const updatedTags = currentTags.map(tag => 
+      tag.tagName === tagName ? { ...tag, isExpanded: !tag.isExpanded } : tag
+    );
+    this.tagsInMonth.set(updatedTags);
   }
 
-  getProgressPercentage(task: Task): number {
+  expandAllTags(): void {
+    const currentTags = this.tagsInMonth();
+    const updatedTags = currentTags.map(tag => ({ ...tag, isExpanded: true }));
+    this.tagsInMonth.set(updatedTags);
+  }
+
+  collapseAllTags(): void {
+    const currentTags = this.tagsInMonth();
+    const updatedTags = currentTags.map(tag => ({ ...tag, isExpanded: false }));
+    this.tagsInMonth.set(updatedTags);
+  }
+
+  getProgressPercentage(task: TasksByTagDTO): number {
     const targetValue = 100;
     return Math.min((task.currentValue || 0) / targetValue * 100, 100);
   }
 
-  getStatusLabel(task: Task): string {
+  getStatusLabel(task: TasksByTagDTO): string {
     if (task.completed) {
       return 'Completed';
     }
@@ -210,7 +154,7 @@ export class MonthlyOverviewComponent implements OnInit {
     return 'Pending';
   }
 
-  getStatusClass(task: Task): string {
+  getStatusClass(task: TasksByTagDTO): string {
     if (task.completed) {
       return 'status-completed';
     }
@@ -223,9 +167,26 @@ export class MonthlyOverviewComponent implements OnInit {
     return 'status-pending';
   }
 
+  getPriorityClass(priority: string): string {
+    switch (priority) {
+      case 'LOW': return 'priority-low';
+      case 'MEDIUM': return 'priority-medium';
+      case 'HIGH': return 'priority-high';
+      case 'CRITICAL': return 'priority-critical';
+      default: return 'priority-medium';
+    }
+  }
+
+  private formatMonthForApi(): string {
+    const year = this.currentMonth.getFullYear();
+    const month = String(this.currentMonth.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
+  }
+
   private updateStats(): void {
-    this.totalTaskCount = this.allTasks.length;
-    this.completedCount = this.allTasks.filter(t => t.completed).length;
-    this.pendingCount = this.allTasks.filter(t => !t.completed).length;
+    const allTags = this.tagsInMonth();
+    this.totalTaskCount = allTags.reduce((sum, tag) => sum + tag.taskCount, 0);
+    this.completedCount = allTags.reduce((sum, tag) => sum + tag.completedCount, 0);
+    this.pendingCount = allTags.reduce((sum, tag) => sum + tag.pendingCount, 0);
   }
 }

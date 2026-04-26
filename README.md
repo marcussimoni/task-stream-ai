@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_updated: 2026-04-21
+version: 1.1.0
+last_updated: 2026-04-26
 author: AI / Developer
 ---
 
@@ -32,7 +32,7 @@ Not intended for production use or multi-user environments.***
 | **Task Management** | CRUD operations with priorities (Low, Medium, High, Critical) and progress tracking |
 | **Tag System** | Color-coded tags for task categorization and filtering |
 | **Weekly Calendar** | Schedule tasks in a Monday-Sunday view with multi-tag and multi-day assignment |
-| **Monthly Overview** | Task summaries grouped by week with navigation |
+| **Monthly Overview** | Task summaries grouped by tag with collapsible sections and navigation |
 | **Metrics Dashboard** | Visual charts showing task completion by tag and time period |
 | **Database Backup** | On-demand backup and restore via admin panel |
 | **AI Integration** | Optional Ollama integration for AI-powered features |
@@ -169,4 +169,5 @@ Detailed PRDs are located in `spec/features/`:
 ![Dashboard](imgs/dashboard.png)
 
 ### Monthly overview feature
-![Monthly Overview](imgs/monthly-overview.png)
+![Monthly Overview](imgs/monthly-overview-01.png)
+![Monthly Overview](imgs/monthly-overview-02.png)

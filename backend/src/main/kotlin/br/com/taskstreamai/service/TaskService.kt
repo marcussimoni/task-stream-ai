@@ -4,6 +4,8 @@ import br.com.taskstreamai.dto.LinkContentDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskQueryParamsDTO
 import br.com.taskstreamai.dto.TaskRequestDTO
+import br.com.taskstreamai.dto.TasksByTagDTO
+import br.com.taskstreamai.dto.TasksGroupedDTO
 import br.com.taskstreamai.exception.ResourceNotFoundException
 import br.com.taskstreamai.mapper.TaskMapper
 import br.com.taskstreamai.model.Task
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 private const val PERCENT_COMPLETED = 100
 
@@ -159,6 +162,26 @@ class TaskService(
         val tasks = taskRepository.findTaskByDates(total)
         val tasksTemplate = tasks.map { TaskMapper.toDTO(it) }
         return tasksTemplate
+    }
+
+    fun getTasksGroupedByTag(month: LocalDate): List<TasksGroupedDTO> {
+
+        val startDate: LocalDate = month.with(TemporalAdjusters.firstDayOfMonth())
+        val endDate: LocalDate = month.with(TemporalAdjusters.lastDayOfMonth())
+
+        val tasksByTag = taskRepository.countTasksByTag(startDate, endDate)
+
+        return tasksByTag.map {
+            val tasks = taskRepository.getTasksByTagAndDate(startDate, endDate, it.id)
+            TasksGroupedDTO(
+                it.tag,
+                it.total,
+                tasks
+            )
+        }
+
+
+
     }
 
 }

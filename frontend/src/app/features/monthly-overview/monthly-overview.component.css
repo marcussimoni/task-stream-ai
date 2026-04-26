@@ -42,18 +42,14 @@
   text-decoration: underline;
 }
 
-.sort-controls {
+.expand-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #dee2e6;
-}
-
-.sort-controls span {
-  color: #6c757d;
-  font-size: 0.875rem;
+  justify-content: center;
 }
 
 .loading-section {
@@ -75,21 +71,21 @@
   color: #adb5bd;
 }
 
-.weeks-list {
+.tags-list {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
-.week-section {
+.tag-section {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   background-color: #fff;
   overflow: hidden;
 }
 
-.week-header {
+.tag-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -97,16 +93,32 @@
   background-color: #1a5692;
   border-bottom: 1px solid #dee2e6;
   color: #f1f1f1;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.week-label {
+.tag-header:hover {
+  background-color: #1557a0;
+}
+
+.tag-label {
   font-weight: 600;
   color: #f1f1f1;
 }
 
-.week-task-count {
+.tag-expand-icon {
   font-size: 0.875rem;
   color: #f1f1f1;
+  transition: transform 0.2s ease;
+}
+
+.tag-stats {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
 }
 
 .tasks-list {
@@ -214,6 +226,42 @@
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+.tag-name {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.priority-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.priority-low {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.priority-medium {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.priority-high {
+  background-color: #ffe5cc;
+  color: #856404;
+}
+
+.priority-critical {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .type-badge {
@@ -326,7 +374,13 @@
     justify-content: center;
   }
 
-  .week-header {
+  .tag-header {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .tag-stats {
     flex-direction: column;
     gap: 0.25rem;
     text-align: center;

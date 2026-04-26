@@ -5,6 +5,7 @@ import br.com.taskstreamai.dto.LinkContentDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskQueryParamsDTO
 import br.com.taskstreamai.dto.TaskRequestDTO
+import br.com.taskstreamai.dto.TasksGroupedDTO
 import br.com.taskstreamai.service.TaskService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -85,6 +86,11 @@ class TaskController(
     @GetMapping("link-content")
     fun getLinkContent(@RequestParam url: String): ResponseEntity<LinkContentDTO> {
         return ResponseEntity.ok(taskService.loadLinkContent(url))
+    }
+
+    @GetMapping("grouped-by-tags")
+    fun getGroupedTasksByTags(@RequestParam month: LocalDate): ResponseEntity<List<TasksGroupedDTO>> {
+        return ResponseEntity.ok(taskService.getTasksGroupedByTag(month))
     }
 
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Task } from '../models';
+import { Task, TasksGroupedDTO } from '../models';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -63,5 +63,10 @@ export class TaskService {
 
   loadLinkContent(link: string): Observable<{ title: string }> {
     return this.apiService.get<{ title: string; content: string }>(`${this.endpoint}/link-content?url=${encodeURIComponent(link)}`);
+  }
+
+  getGroupedTasksByTags(month: string): Observable<TasksGroupedDTO[]> {
+    const url = `${this.endpoint}/grouped-by-tags?month=${month}`;
+    return this.apiService.get<TasksGroupedDTO[]>(url);
   }
 }

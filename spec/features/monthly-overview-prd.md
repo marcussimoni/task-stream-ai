@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_updated: 2026-04-17
+version: 1.1.0
+last_updated: 2026-04-26
 author: AI Assistant
 ---
 
@@ -10,7 +10,7 @@ author: AI Assistant
 **Monthly Overview** (renamed from Weekly Overview)
 
 ## 2. Overview / Objective
-Transform the existing Weekly Overview feature into a Monthly Overview view that displays tasks grouped by week within a selected month. The feature allows users to navigate between months and view all tasks that overlap with the selected month, organized chronologically by week.
+Transform the existing Monthly Overview feature to display tasks grouped by tag within a selected month. The feature allows users to navigate between months and view all tasks that overlap with the selected month, organized by tag in descending order of task count. Each tag section shows all associated tasks (completed and incomplete) for that month.
 
 ## 3. Target Users
 - End users tracking daily routines
@@ -23,15 +23,17 @@ Transform the existing Weekly Overview feature into a Monthly Overview view that
 - **Month Navigation**: Previous/Next/Current month navigation controls
 - **Default View**: Always loads the current month on initial access
 - **Date Range Query**: Fetch tasks where `startDate ≤ monthEnd` AND `endDate ≥ monthStart`
-- **Week Grouping**: Tasks displayed in collapsible/expandable week sections
-- **Sorting**: Tasks sorted alphabetically by name within each week group
-- **Stats Summary**: Display total task count, completed count, and pending count
+- **Tag Grouping**: Tasks displayed in collapsible/expandable tag sections
+- **Tag Sorting**: Tags sorted by descending task count (tags with most tasks first)
+- **Task Sorting**: Tasks sorted alphabetically by name within each tag group
+- **Stats Summary**: Display total task count, completed count, and pending count per tag
 
 ### Display Elements
 - Month label showing selected month/year (e.g., "April 2026")
-- Week sections labeled by date range (e.g., "Apr 1 - Apr 6", "Apr 7 - Apr 13")
+- Tag sections labeled by tag name with task count (e.g., "Coding (5 tasks)", "Learning (3 tasks)")
 - Task items showing: name, description, status badge, tag, date range, progress bar
 - Empty state when no tasks for the selected month
+- Tags without tasks are not displayed
 
 ## 5. Non-Functional Requirements
 
@@ -47,20 +49,21 @@ Transform the existing Weekly Overview feature into a Monthly Overview view that
 - Update route from `/weekly-overview` to `/monthly-overview`
 - Update component selector from `app-weekly-overview` to `app-monthly-overview`
 - Rename files: `weekly-overview.component.*` → `monthly-overview.component.*`
-- Implement week grouping algorithm:
-  - Calculate ISO weeks within selected month
-  - Distribute tasks into week buckets based on date overlap
-- Update `TaskService` call: `getTasksForWeek()` → `getTasksForMonth()` (or reuse existing endpoint with date params)
+- Simplify frontend logic: consume pre-grouped data from backend
+- Remove client-side grouping logic since backend handles it
+- Update `TaskService` call: `getTasksForWeek()` → `getGroupedTasksByTags()`
 
 ### Backend/API (No DB changes required)
-- **Option A**: Use existing `getTasksForWeek` endpoint - pass full month date range
-- **Option B**: Create new `GET /api/tasks/monthly` endpoint accepting `monthStart` and `monthEnd` parameters
+- **Use existing endpoint**: `GET /api/tasks/grouped-by-tags` accepting `month` parameter
+- This endpoint returns pre-grouped tasks by tag with counts included
 
-### Algorithm: Week Grouping
+### Algorithm: Tag Grouping
 ```typescript
-// For a given month, calculate week buckets (Monday-Sunday)
-// Assign each task to all weeks where it has at least one day overlap
-// Sort tasks by name within each week
+// Backend handles grouping - use GET /api/tasks/grouped-by-tags
+// Frontend receives pre-grouped data by tag
+// Sort tags by descending task count (already done by backend)
+// Sort tasks alphabetically within each tag
+// Filter out tags with no tasks (already done by backend)
 ```
 
 ## 7. UI / UX Specifications
@@ -74,38 +77,44 @@ Transform the existing Weekly Overview feature into a Monthly Overview view that
 ├─────────────────────────────────────┤
 │  Sort by: [Name] [Tag]              │
 ├─────────────────────────────────────┤
-│  Week 1: Apr 1 - Apr 6              │
+│  Coding (5 tasks) ▼                 │
 │  ┌─────────────────────────────┐     │
 │  │ Task A    [In Progress]    │     │
 │  │ Task B    [Completed]      │     │
+│  │ Task E    [Not Started]      │     │
 │  └─────────────────────────────┘     │
-│  Week 2: Apr 7 - Apr 13             │
+│  Learning (3 tasks) ▲               │
 │  ┌─────────────────────────────┐     │
 │  │ Task C    [Not Started]      │     │
+│  │ Task D    [Completed]      │     │
 │  └─────────────────────────────┘     │
 ├─────────────────────────────────────┤
-│  5 tasks | 2 completed | 3 pending  │
+│  8 tasks | 3 completed | 5 pending  │
 └─────────────────────────────────────┘
 ```
 
 ### Visual Requirements
-- Week sections should be visually distinct (card-style or bordered)
+- Tag sections should be visually distinct (card-style or bordered)
+- Tag labels show tag name and task count with expand/collapse indicators
 - Tasks maintain existing styling: progress bar, status badge, tag color
-- Week label shows short date range for that week
+- Tags ordered by descending task count (most tasks first)
+- Collapsible sections to show/hide tasks within each tag
 
 ## 8. Success Metrics
 - User can navigate to any month and see tasks within 1 second
-- Tasks are correctly grouped into weeks based on date overlap
+- Tasks are correctly grouped by tag within the selected month
+- Tags are ordered by descending task count
 - Component renders without console errors
 - All existing task display features preserved
 
 ## 9. Edge Cases / Constraints
 
 ### Edge Cases
-- **Month spanning partial weeks**: First and last weeks may include days from previous/next month - include these partial weeks
-- **Task spanning multiple weeks**: Task appears in each week it overlaps with
 - **Empty month**: Display friendly empty state with hint text
-- **Week boundaries**: Use ISO week standard (Monday as week start)
+- **Tag with no tasks**: Tags without tasks are not displayed
+- **Task spanning multiple months**: Task appears in each month it overlaps with
+- **Single task in tag**: Display tag section with single task
+- **No tags assigned**: Handle tasks without tags appropriately
 
 ### Constraints
 - **No backend/database changes** - use existing data structure
@@ -137,20 +146,22 @@ export class WeeklyOverviewComponent {
 export class MonthlyOverviewComponent {
   currentMonth: Date;
   monthLabel: string;
-  weeksInMonth: WeekGroup[];
+  tagsInMonth: TagGroup[];
   loadTasksForMonth(): void;
 }
 
-interface WeekGroup {
-  weekStart: Date;
-  weekEnd: Date;
-  weekLabel: string;
+interface TagGroup {
+  tagName: string;
+  taskCount: number;
+  completedCount: number;
+  pendingCount: number;
   tasks: Task[];
+  isExpanded: boolean;
 }
 ```
 
-### API Endpoint (if needed)
+### API Endpoint
 ```
-GET /api/tasks?startDate={monthStart}&endDate={monthEnd}
-Response: Task[] (same as current)
+GET /api/tasks/grouped-by-tags?month={month}
+Response: List<TasksGroupedDTO>
 ```

@@ -31,3 +31,21 @@ export interface Task {
   link?: string;
   summary?: string;
 }
+
+export interface TasksByTagDTO {
+  id: number;
+  task: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  tag: string;
+  priority: string;
+  completed: boolean;
+  currentValue: number;
+}
+
+export interface TasksGroupedDTO {
+  tag: string;
+  total: number;
+  tasks: TasksByTagDTO[];
+}

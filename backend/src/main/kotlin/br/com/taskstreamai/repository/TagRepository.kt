@@ -16,4 +16,5 @@ interface TagRepository : JpaRepository<Tag, Long> {
 
     @Query("SELECT t FROM Tag t ORDER BY t.name ASC")
     fun findAllTags() : List<Tag>
+
 }
