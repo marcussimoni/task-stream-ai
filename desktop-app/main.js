@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -22,7 +22,7 @@ async function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 800,
-        title: "TaskStream AI",
+        title: `TaskStream AI - ${app.getVersion()}`,
         webPreferences: {
             nodeIntegration: false, // Security best practice
             contextIsolation: true
@@ -38,9 +38,20 @@ async function createWindow() {
         resizable: false,
         webPreferences: { nodeIntegration: false }
     });
+
+    await session.defaultSession.clearCache();
+
     splash.loadFile(path.join(__dirname, 'splash.html'));
     console.log("Forcing splash screen visibility...");
     await new Promise(resolve => setTimeout(resolve, 5000));
+
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        // Use shell.openExternal to open in the system's default browser
+        shell.openExternal(url);
+        
+        // Return 'deny' to prevent Electron from opening a new internal window
+        return { action: 'deny' };
+    });
 
     // Attempt to load the URL with a retry mechanism
     const loadURL = () => {
