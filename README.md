@@ -155,7 +155,18 @@ Detailed PRDs are located in `spec/features/`:
 
 ## Screenshots
 
+### Tasks feature + Ai assistant
 ![Tasks](imgs/tasks.png)
+### Ai assistant - step 1
+![Tasks](imgs/ai-assistant-01.png)
+### Ai assistant - step 2
+![Tasks](imgs/ai-assistant-02.png)
+
+### Calendar feature
 ![Calendar](imgs/calendar.png)
+
+### Dashboard feature
 ![Dashboard](imgs/dashboard.png)
+
+### Monthly overview feature
 ![Monthly Overview](imgs/monthly-overview.png)
