@@ -846,3 +846,486 @@ Before completing any controller implementation or refactoring:
 - Keep tests fast and focused
 - Avoid unnecessary database interactions
 - Use MockMvc for controller layer testing only
+
+---
+
+## 9. Service Layer Test Specification
+
+### 9.1 Overview
+All service tests must follow Spring Boot 4 and Mockito 5 patterns. This specification ensures consistency and maintainability across all service layer unit tests.
+
+### 9.2 Required Test Dependencies
+```kotlin
+// Spring Boot 4 Testing
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertThrows
+
+// Mockito 5 Core API
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.ArgumentMatchers
+import java.util.*
+
+// Project imports
+import br.com.taskstreamai.dto.*
+import br.com.taskstreamai.exception.*
+import br.com.taskstreamai.mapper.*
+import br.com.taskstreamai.model.*
+import br.com.taskstreamai.repository.*
+import br.com.taskstreamai.service.*
+```
+
+### 9.3 Test Class Structure
+```kotlin
+class ServiceClassTest {
+    
+    @Mock
+    private lateinit var repository: RepositoryClass
+    @Mock
+    private lateinit var dependencyService: DependencyService
+    @Mock
+    private lateinit var mapper: MapperClass
+    
+    private lateinit var service: ServiceClass
+    
+    @BeforeEach
+    fun setup() {
+        repository = Mockito.mock(RepositoryClass::class.java)
+        dependencyService = Mockito.mock(DependencyService::class.java)
+        mapper = Mockito.mock(MapperClass::class.java)
+        
+        service = ServiceClass(repository, dependencyService, mapper)
+    }
+    
+    // Test methods here
+}
+```
+
+### 9.4 Test Patterns
+
+#### 9.4.1 Happy Path Tests
+```kotlin
+@Test
+fun `should create entity successfully`() {
+    // Given
+    val requestDTO = CreateEntityRequestDTO(
+        name = "Test Entity",
+        description = "Test Description"
+    )
+    val entity = Entity(
+        id = 1L,
+        name = "Test Entity",
+        description = "Test Description",
+        tag = testTag,
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
+    val expectedDTO = EntityDTO(
+        id = 1L,
+        name = "Test Entity",
+        description = "Test Description",
+        tag = TagDTO(id = 1L, name = "Work", description = "Work tasks", color = "#FF0000", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
+    
+    Mockito.doReturn(Optional.of(testTag)).`when`(repository).findById(1L)
+    Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any(Entity::class.java))
+    Mockito.doReturn(expectedDTO).`when`(mapper).toDTO(entity)
+
+    // When
+    val result = service.createEntity(requestDTO)
+
+    // Then
+    assert(result.id == 1L)
+    assert(result.name == "Test Entity")
+    assert(result.description == "Test Description")
+}
+```
+
+#### 9.4.2 Exception Handling Tests
+```kotlin
+@Test
+fun `should throw exception when entity not found`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    try {
+        service.getEntityById(999L)
+        assert(false) { "Should have thrown ResourceNotFoundException" }
+    } catch (e: ResourceNotFoundException) {
+        // Expected exception
+    }
+}
+```
+
+#### 9.4.3 Edge Case Tests
+```kotlin
+@Test
+fun `should handle empty list gracefully`() {
+    // Given
+    Mockito.doReturn(emptyList<Entity>()).`when`(repository).findAll()
+
+    // When
+    val result = service.getAllEntities()
+
+    // Then
+    assert(result.isEmpty())
+}
+
+@Test
+fun `should handle null input gracefully`() {
+    // Given
+    val emptyInputDTO = CreateEntityRequestDTO(input = "")
+    Mockito.doReturn(testTag).`when`(dependencyService).getTagById(1L)
+
+    // When
+    val result = service.processEntity(emptyInputDTO)
+
+    // Then
+    assert(result != null)
+    assert(result!!.isEmpty())
+}
+```
+
+### 9.5 Mockito 5 Usage Guidelines
+
+#### 9.5.1 Use `doReturn()` and `doThrow()` instead of `when()`
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(expectedDTO).`when`(repository).findById(1L)
+Mockito.doThrow(RuntimeException("Database error")).`when`(repository).save(org.mockito.ArgumentMatchers.any())
+
+// ❌ AVOID (causes issues with any() matchers)
+Mockito.`when`(repository.findById(any())).thenReturn(Optional.of(entity))
+```
+
+#### 9.5.2 Use Explicit Type Parameters for Generic Methods
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+Mockito.doReturn(Optional.empty<Tag>()).`when`(tagRepository).findById(999L)
+
+// ❌ AVOID (causes type inference issues)
+Mockito.doReturn(Optional.empty()).`when`(repository).findById(999L)
+```
+
+#### 9.5.3 Use `ArgumentMatchers.any()` with Explicit Types
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any(Entity::class.java))
+Mockito.doReturn(emptyList<Entity>()).`when`(repository).findAllEntities(org.mockito.ArgumentMatchers.any(String::class.java))
+
+// ❌ AVOID (causes type inference issues)
+Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any())
+```
+
+#### 9.5.4 Void Method Stubbing
+```kotlin
+// ✅ CORRECT
+Mockito.doNothing().`when`(repository).deleteById(1L)
+
+// ❌ AVOID
+Mockito.`when`(repository.deleteById(1L)).thenAnswer(Unit)
+```
+
+### 9.6 Exception Testing Patterns
+
+#### 9.6.1 Use Try-Catch Instead of assertThrows
+```kotlin
+// ✅ CORRECT
+@Test
+fun `should throw exception when getting non-existent entity`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    try {
+        service.getEntityById(999L)
+        assert(false) { "Should have thrown ResourceNotFoundException" }
+    } catch (e: ResourceNotFoundException) {
+        // Expected exception
+    }
+}
+
+// ❌ AVOID (causes type inference issues in some cases)
+@Test
+fun `should throw exception when getting non-existent entity`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    assertThrows<ResourceNotFoundException> {
+        service.getEntityById(999L)
+    }
+}
+```
+
+### 9.7 DTO and Entity Construction Guidelines
+
+#### 9.7.1 Include All Required Fields
+```kotlin
+val testTag = Tag(
+    id = 1L,
+    name = "Work",
+    description = "Work tasks",
+    color = "#FF0000",
+    createdAt = LocalDateTime.now(),
+    updatedAt = LocalDateTime.now()
+)
+
+val entity = Entity(
+    id = 1L,
+    name = "Test Entity",
+    description = "Test Description",
+    currentValue = 0,
+    startDate = LocalDate.now(),
+    endDateInterval = 1,
+    endDate = null,
+    completed = false,
+    customEndDateSelected = false,
+    priority = Priority.MEDIUM,
+    tag = testTag,
+    link = null,
+    summary = null,
+    createdAt = LocalDateTime.now(),
+    updatedAt = LocalDateTime.now()
+)
+```
+
+#### 9.7.2 Use Proper Date/Time Types
+```kotlin
+// ✅ CORRECT
+createdAt = LocalDateTime.now()
+updatedAt = LocalDateTime.now()
+startDate = LocalDate.now()
+
+// ❌ AVOID (unless specifically required)
+createdAt = "2024-01-01T00:00:00"
+```
+
+### 9.8 Test Naming Convention
+
+Use descriptive test names with backticks:
+```kotlin
+@Test
+fun `should create entity successfully`() { }
+
+@Test
+fun `should throw exception when entity not found`() { }
+
+@Test
+fun `should handle empty list gracefully`() { }
+
+@Test
+fun `should update entity successfully`() { }
+
+@Test
+fun `should delete entity successfully`() { }
+```
+
+### 9.9 Common Test Scenarios to Cover
+
+1. **CRUD Operations**: Create, Read, Update, Delete
+2. **Exception Handling**: Resource not found, validation errors
+3. **Edge Cases**: Empty lists, null inputs, invalid data
+4. **Business Logic**: Complex calculations, conditional logic
+5. **Integration**: Service-to-service communication
+
+### 9.10 Test File Structure
+
+```
+src/test/kotlin/br/com/taskstreamai/service/
+├── ServiceClassTest.kt
+├── AnotherServiceTest.kt
+└── ...
+```
+
+### 9.11 Required Test Execution
+
+Before completing any service implementation or refactoring:
+1. Run `./mvnw test -Dtest="*ServiceTest"` to ensure all service tests pass
+2. Verify test coverage for new service methods
+3. Ensure no compilation errors related to Mockito usage
+4. Confirm all tests follow the patterns above
+
+### 9.12 Testing Best Practices
+
+#### 9.12.1 Test Organization
+- Group related tests together
+- Use descriptive test method names
+- Follow Given-When-Then pattern in test structure
+- Keep tests focused on single responsibility
+
+#### 9.12.2 Mock Management
+- Use `@Mock` annotations for dependency injection
+- Create fresh mocks in `@BeforeEach` setup
+- Avoid mocking framework classes
+- Use explicit mock objects instead of `any()` matchers
+
+#### 9.12.3 Assertion Strategy
+- Test both success and failure scenarios
+- Verify business logic outcomes
+- Test edge cases and boundary conditions
+- Use meaningful assertions with clear messages
+
+#### 9.12.4 Performance Considerations
+- Keep tests fast and focused
+- Avoid unnecessary database interactions
+- Use pure unit tests for service layer
+- Mock all external dependencies
+
+#### 9.12.5 Complex Service Integration
+For services with complex external dependencies (like AI services):
+- Focus on basic functionality testing
+- Simplify tests to avoid complex mocking issues
+- Test error handling and edge cases
+- Consider integration tests for complex scenarios
+
+### 9.13 Example Complete Service Test
+
+```kotlin
+package br.com.taskstreamai.service
+
+import br.com.taskstreamai.dto.EntityDTO
+import br.com.taskstreamai.dto.CreateEntityRequestDTO
+import br.com.taskstreamai.exception.ResourceNotFoundException
+import br.com.taskstreamai.mapper.EntityMapper
+import br.com.taskstreamai.model.Entity
+import br.com.taskstreamai.model.Tag
+import br.com.taskstreamai.repository.EntityRepository
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.mockito.Mock
+import org.mockito.Mockito
+import java.time.LocalDateTime
+import java.util.*
+
+class EntityServiceTest {
+
+    @Mock
+    private lateinit var repository: EntityRepository
+    @Mock
+    private lateinit var mapper: EntityMapper
+    
+    private lateinit var service: EntityService
+    private lateinit var testTag: Tag
+    private lateinit var testEntity: Entity
+
+    @BeforeEach
+    fun setup() {
+        repository = Mockito.mock(EntityRepository::class.java)
+        mapper = Mockito.mock(EntityMapper::class.java)
+        
+        service = EntityService(repository, mapper)
+        
+        testTag = Tag(
+            id = 1L,
+            name = "Work",
+            description = "Work tasks",
+            color = "#FF0000",
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+        
+        testEntity = Entity(
+            id = 1L,
+            name = "Test Entity",
+            description = "Test Description",
+            tag = testTag,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+    }
+
+    @Test
+    fun `should get entity by id successfully`() {
+        // Given
+        val expectedDTO = EntityDTO(
+            id = 1L,
+            name = "Test Entity",
+            description = "Test Description",
+            tag = TagDTO(id = 1L, name = "Work", description = "Work tasks", color = "#FF0000", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+        
+        Mockito.doReturn(Optional.of(testEntity)).`when`(repository).findById(1L)
+        Mockito.doReturn(expectedDTO).`when`(mapper).toDTO(testEntity)
+
+        // When
+        val result = service.getEntityById(1L)
+
+        // Then
+        assert(result.id == 1L)
+        assert(result.name == "Test Entity")
+        assert(result.description == "Test Description")
+    }
+
+    @Test
+    fun `should throw exception when entity not found`() {
+        // Given
+        Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+        // When & Then
+        try {
+            service.getEntityById(999L)
+            assert(false) { "Should have thrown ResourceNotFoundException" }
+        } catch (e: ResourceNotFoundException) {
+            // Expected exception
+        }
+    }
+
+    @Test
+    fun `should get all entities successfully`() {
+        // Given
+        val entities = listOf(testEntity)
+        val expectedDTOs = listOf(EntityDTO(
+            id = 1L,
+            name = "Test Entity",
+            description = "Test Description",
+            tag = TagDTO(id = 1L, name = "Work", description = "Work tasks", color = "#FF0000", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        ))
+        
+        Mockito.doReturn(entities).`when`(repository).findAll()
+        Mockito.doReturn(expectedDTOs).`when`(mapper).toDTOList(entities)
+
+        // When
+        val result = service.getAllEntities()
+
+        // Then
+        assert(result.size == 1)
+        assert(result[0].id == 1L)
+        assert(result[0].name == "Test Entity")
+    }
+
+    @Test
+    fun `should delete entity successfully`() {
+        // Given
+        Mockito.doReturn(true).`when`(repository).existsById(1L)
+        Mockito.doNothing().`when`(repository).deleteById(1L)
+
+        // When & Then - Should not throw exception
+        service.deleteEntity(1L)
+    }
+}
+```
+
+### 9.14 Service Layer Testing Checklist
+
+Before completing any service test:
+- [ ] Test follows Spring Boot 4 and Mockito 5 patterns
+- [ ] Uses `@Mock` annotations and proper mock setup
+- [ ] Uses `doReturn()` and `doThrow()` instead of `when()`
+- [ ] Uses explicit type parameters for generic methods
+- [ ] Uses try-catch for exception testing instead of assertThrows
+- [ ] Includes all required fields in DTOs and entities
+- [ ] Tests both success and failure scenarios
+- [ ] Tests edge cases and boundary conditions
+- [ ] Uses descriptive test names with backticks
+- [ ] Follows Given-When-Then structure
+- [ ] All tests pass with `./mvnw test -Dtest="*ServiceTest"`

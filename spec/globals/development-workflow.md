@@ -438,3 +438,365 @@ Before completing any controller implementation or refactoring:
 2. Verify test coverage for new endpoints
 3. Ensure no compilation errors related to Mockito usage
 4. Confirm all tests follow the patterns above
+
+---
+
+## Service Layer Testing Workflow
+
+### Overview
+All service layer tests must follow Spring Boot 4 and Mockito 5 patterns. This workflow ensures consistency and maintainability across all service tests.
+
+### Step 1: Test Setup
+```kotlin
+// Required dependencies
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertThrows
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.ArgumentMatchers
+import java.util.*
+
+// Project imports
+import br.com.taskstreamai.dto.*
+import br.com.taskstreamai.exception.*
+import br.com.taskstreamai.mapper.*
+import br.com.taskstreamai.model.*
+import br.com.taskstreamai.repository.*
+import br.com.taskstreamai.service.*
+```
+
+### Step 2: Test Class Structure
+```kotlin
+class ServiceClassTest {
+    
+    @Mock
+    private lateinit var repository: RepositoryClass
+    @Mock
+    private lateinit var dependencyService: DependencyService
+    @Mock
+    private lateinit var mapper: MapperClass
+    
+    private lateinit var service: ServiceClass
+    
+    @BeforeEach
+    fun setup() {
+        repository = Mockito.mock(RepositoryClass::class.java)
+        dependencyService = Mockito.mock(DependencyService::class.java)
+        mapper = Mockito.mock(MapperClass::class.java)
+        
+        service = ServiceClass(repository, dependencyService, mapper)
+    }
+}
+```
+
+### Step 3: Test Data Setup
+```kotlin
+private lateinit var testTag: Tag
+private lateinit var testEntity: Entity
+
+@BeforeEach
+fun setup() {
+    // Mock setup
+    // ...
+    
+    testTag = Tag(
+        id = 1L,
+        name = "Work",
+        description = "Work tasks",
+        color = "#FF0000",
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
+    
+    testEntity = Entity(
+        id = 1L,
+        name = "Test Entity",
+        description = "Test Description",
+        tag = testTag,
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
+}
+```
+
+### Step 4: Test Implementation Patterns
+
+#### 4.1 Happy Path Tests
+```kotlin
+@Test
+fun `should create entity successfully`() {
+    // Given
+    val requestDTO = CreateEntityRequestDTO(
+        name = "Test Entity",
+        description = "Test Description"
+    )
+    val expectedDTO = EntityDTO(
+        id = 1L,
+        name = "Test Entity",
+        description = "Test Description",
+        tag = TagDTO(id = 1L, name = "Work", description = "Work tasks", color = "#FF0000", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now()),
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
+    
+    Mockito.doReturn(Optional.of(testTag)).`when`(repository).findById(1L)
+    Mockito.doReturn(testEntity).`when`(repository).save(org.mockito.ArgumentMatchers.any(Entity::class.java))
+    Mockito.doReturn(expectedDTO).`when`(mapper).toDTO(testEntity)
+
+    // When
+    val result = service.createEntity(requestDTO)
+
+    // Then
+    assert(result.id == 1L)
+    assert(result.name == "Test Entity")
+    assert(result.description == "Test Description")
+}
+```
+
+#### 4.2 Exception Handling Tests
+```kotlin
+@Test
+fun `should throw exception when entity not found`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    try {
+        service.getEntityById(999L)
+        assert(false) { "Should have thrown ResourceNotFoundException" }
+    } catch (e: ResourceNotFoundException) {
+        // Expected exception
+    }
+}
+```
+
+#### 4.3 Edge Case Tests
+```kotlin
+@Test
+fun `should handle empty list gracefully`() {
+    // Given
+    Mockito.doReturn(emptyList<Entity>()).`when`(repository).findAll()
+
+    // When
+    val result = service.getAllEntities()
+
+    // Then
+    assert(result.isEmpty())
+}
+```
+
+### Step 5: Mockito 5 Best Practices
+
+#### 5.1 Use `doReturn()` and `doThrow()` instead of `when()`
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(expectedDTO).`when`(repository).findById(1L)
+Mockito.doThrow(RuntimeException("Database error")).`when`(repository).save(org.mockito.ArgumentMatchers.any())
+
+// ❌ AVOID
+Mockito.`when`(repository.findById(any())).thenReturn(Optional.of(entity))
+```
+
+#### 5.2 Use Explicit Type Parameters
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+Mockito.doReturn(Optional.empty<Tag>()).`when`(tagRepository).findById(999L)
+
+// ❌ AVOID
+Mockito.doReturn(Optional.empty()).`when`(repository).findById(999L)
+```
+
+#### 5.3 Use `ArgumentMatchers.any()` with Explicit Types
+```kotlin
+// ✅ CORRECT
+Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any(Entity::class.java))
+
+// ❌ AVOID
+Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any())
+```
+
+### Step 6: Exception Testing Strategy
+
+#### Use Try-Catch Instead of assertThrows
+```kotlin
+// ✅ CORRECT
+@Test
+fun `should throw exception when entity not found`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    try {
+        service.getEntityById(999L)
+        assert(false) { "Should have thrown ResourceNotFoundException" }
+    } catch (e: ResourceNotFoundException) {
+        // Expected exception
+    }
+}
+
+// ❌ AVOID (causes type inference issues)
+@Test
+fun `should throw exception when entity not found`() {
+    // Given
+    Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+
+    // When & Then
+    assertThrows<ResourceNotFoundException> {
+        service.getEntityById(999L)
+    }
+}
+```
+
+### Step 7: Test Execution Workflow
+
+#### 7.1 Before Running Tests
+1. **Verify Mock Setup**: Ensure all mocks are properly configured
+2. **Check Dependencies**: Confirm all required imports are present
+3. **Validate Test Data**: Ensure test objects include all required fields
+
+#### 7.2 Running Tests
+```bash
+# Run all service tests
+./mvnw test -Dtest="*ServiceTest"
+
+# Run specific service test
+./mvnw test -Dtest="ServiceClassTest"
+
+# Run tests with detailed output
+./mvnw test -Dtest="*ServiceTest" -X
+```
+
+#### 7.3 After Running Tests
+1. **Check Compilation**: Ensure no compilation errors
+2. **Verify Test Results**: All tests should pass
+3. **Review Coverage**: Ensure adequate test coverage
+4. **Fix Issues**: Address any failing tests immediately
+
+### Step 8: Common Issues and Solutions
+
+#### 8.1 Type Inference Issues
+**Problem**: `Cannot infer type for type parameter 'T'`
+**Solution**: Use explicit type parameters for generic methods
+```kotlin
+Mockito.doReturn(Optional.empty<Entity>()).`when`(repository).findById(999L)
+```
+
+#### 8.2 NullPointerException in Mocks
+**Problem**: Mock returns null unexpectedly
+**Solution**: Ensure proper mock configuration with `doReturn()`
+```kotlin
+Mockito.doReturn(entity).`when`(repository).save(org.mockito.ArgumentMatchers.any(Entity::class.java))
+```
+
+#### 8.3 assertThrows Type Issues
+**Problem**: Type inference issues with assertThrows
+**Solution**: Use try-catch pattern instead
+```kotlin
+try {
+    service.getEntityById(999L)
+    assert(false) { "Should have thrown ResourceNotFoundException" }
+} catch (e: ResourceNotFoundException) {
+    // Expected exception
+}
+```
+
+### Step 9: Testing Checklist
+
+Before completing any service test implementation:
+
+#### 9.1 Code Quality
+- [ ] Test follows Spring Boot 4 and Mockito 5 patterns
+- [ ] Uses `@Mock` annotations and proper mock setup
+- [ ] Uses `doReturn()` and `doThrow()` instead of `when()`
+- [ ] Uses explicit type parameters for generic methods
+- [ ] Uses try-catch for exception testing instead of assertThrows
+
+#### 9.2 Test Coverage
+- [ ] Tests both success and failure scenarios
+- [ ] Tests edge cases and boundary conditions
+- [ ] Tests CRUD operations (Create, Read, Update, Delete)
+- [ ] Tests business logic and validation
+- [ ] Tests service-to-service integration
+
+#### 9.3 Test Structure
+- [ ] Uses descriptive test names with backticks
+- [ ] Follows Given-When-Then structure
+- [ ] Includes all required fields in DTOs and entities
+- [ ] Uses proper date/time types (LocalDateTime, LocalDate)
+- [ ] Groups related tests together
+
+#### 9.4 Execution Validation
+- [ ] All tests pass with `./mvnw test -Dtest="*ServiceTest"`
+- [ ] No compilation errors related to Mockito usage
+- [ ] No type inference issues
+- [ ] Test execution is fast and focused
+
+### Step 10: Complex Service Handling
+
+For services with complex external dependencies (like AI services):
+
+#### 10.1 Simplified Testing Strategy
+- Focus on basic functionality testing
+- Test error handling and edge cases
+- Avoid complex mocking scenarios
+- Consider integration tests for complex flows
+
+#### 10.2 Example: AI Service Testing
+```kotlin
+@Test
+fun `should initialize service correctly`() {
+    // Given - Service is initialized in setup
+    
+    // When
+    val service = aiAssistantService
+
+    // Then - Service should be properly initialized
+    assert(service != null)
+}
+
+@Test
+fun `should handle AI service exceptions gracefully`() {
+    // Given
+    Mockito.doThrow(RuntimeException("AI service unavailable")).`when`(createTaskChatClient).prompt(org.mockito.ArgumentMatchers.any<String>())
+    
+    // When
+    val result = aiAssistantService.planAutomatedTaskCreation(AutomatedTaskDTO("test input"))
+
+    // Then - Should handle exceptions gracefully
+    assert(result == null)
+}
+```
+
+### Step 11: Continuous Integration
+
+#### 11.1 Pre-commit Checks
+1. Run service tests: `./mvnw test -Dtest="*ServiceTest"`
+2. Verify no compilation errors
+3. Check test coverage metrics
+4. Ensure all tests follow established patterns
+
+#### 11.2 Code Review Guidelines
+- Review test coverage for new service methods
+- Verify Mockito 5 compliance
+- Check for proper exception handling
+- Ensure test naming conventions are followed
+
+### Step 12: Documentation Updates
+
+When adding new service tests:
+
+1. **Update Test Documentation**: Add new test patterns to this document
+2. **Update Architecture Guidelines**: Reference new testing strategies
+3. **Update Development Workflow**: Include any new testing workflows
+4. **Create Examples**: Provide example tests for complex scenarios
+
+### Required Test Execution
+
+Before completing any service implementation or refactoring:
+1. Run `./mvnw test -Dtest="*ServiceTest"` to ensure all service tests pass
+2. Verify test coverage for new service methods
+3. Ensure no compilation errors related to Mockito usage
+4. Confirm all tests follow the patterns above
+5. Check all items in the testing checklist (Step 9)
