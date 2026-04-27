@@ -5,10 +5,6 @@ import br.com.taskstreamai.dto.AutomatedTaskDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskRequestDTO
 import br.com.taskstreamai.model.Priority
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.PromptTemplate
