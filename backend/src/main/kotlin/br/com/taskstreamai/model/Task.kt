@@ -46,5 +46,22 @@ data class Task(
     var link: String? = null,
 
     @Column(columnDefinition = "TEXT")
-    var summary: String? = null
+    var summary: String? = null,
+
+    // Estimated time fields for content analysis
+    @Column(name = "total_word_count")
+    var totalWordCount: Int? = null,
+
+    @Column(name = "technical_depth")
+    @Enumerated(EnumType.STRING)
+    var technicalDepth: TechnicalDepth? = null,
+
+    @Column(name = "estimated_reading_time_minutes")
+    var estimatedReadingTimeMinutes: Int? = null,
+
+    @Column(name = "depth_justification", length = 500)
+    var depthJustification: String? = null,
+
+    @Column(name = "recommended_pace", length = 200)
+    var recommendedPace: String? = null
 )

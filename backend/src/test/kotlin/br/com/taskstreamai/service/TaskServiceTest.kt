@@ -9,6 +9,8 @@ import br.com.taskstreamai.model.Tag
 import br.com.taskstreamai.model.Task
 import br.com.taskstreamai.repository.TagRepository
 import br.com.taskstreamai.repository.TaskRepository
+import br.com.taskstreamai.service.AiAssistantService
+import br.com.taskstreamai.service.WebScraperService
 import org.jsoup.nodes.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +28,9 @@ class TaskServiceTest {
     @Mock
     private lateinit var tagRepository: TagRepository
     @Mock
-    private lateinit var summarizeArticleService: SummarizeArticleService
+    private lateinit var aiAssistantService: AiAssistantService
+    @Mock
+    private lateinit var webScraperService: WebScraperService
     private lateinit var taskService: TaskService
 
     private lateinit var testTag: Tag
@@ -37,9 +41,10 @@ class TaskServiceTest {
     fun setup() {
         taskRepository = Mockito.mock(TaskRepository::class.java)
         tagRepository = Mockito.mock(TagRepository::class.java)
-        summarizeArticleService = Mockito.mock(SummarizeArticleService::class.java)
+        aiAssistantService = Mockito.mock(AiAssistantService::class.java)
+        webScraperService = Mockito.mock(WebScraperService::class.java)
         
-        taskService = TaskService(taskRepository, tagRepository, summarizeArticleService)
+        taskService = TaskService(taskRepository, tagRepository, aiAssistantService, webScraperService)
 
         testTag = Tag(
             id = 1L,
@@ -169,13 +174,13 @@ class TaskServiceTest {
     fun `should load link content successfully`() {
         // Given
         val url = "https://example.com"
-        val mockDocument = Mockito.mock(Document::class.java)
+        val mockDocument = Mockito.mock(org.jsoup.nodes.Document::class.java)
         
-        // Mock the document to return a title string
+        // Mock the document behavior
         Mockito.doReturn("Example Title").`when`(mockDocument).title()
         
         // Mock the service to return a Document
-        Mockito.doReturn(mockDocument).`when`(summarizeArticleService).loadSiteFromUrl(url)
+        Mockito.doReturn(mockDocument).`when`(webScraperService).loadSiteFromUrl(url)
 
         // When
         val result = taskService.loadLinkContent(url)

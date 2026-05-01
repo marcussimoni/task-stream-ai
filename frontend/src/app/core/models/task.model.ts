@@ -30,6 +30,12 @@ export interface Task {
   priority: Priority;
   link?: string;
   summary?: string;
+  // Estimated time fields for content analysis
+  totalWordCount?: number;
+  technicalDepth?: 'LOW' | 'MEDIUM' | 'HIGH';
+  estimatedReadingTimeMinutes?: number;
+  depthJustification?: string;
+  recommendedPace?: string;
 }
 
 export interface TasksByTagDTO {

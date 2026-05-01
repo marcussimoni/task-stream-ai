@@ -12,9 +12,9 @@ class AiAssistantServiceTest {
     @Mock
     private lateinit var createTaskChatClient: ChatClient
     @Mock
-    private lateinit var taskService: TaskService
+    private lateinit var chatClient: ChatClient
     @Mock
-    private lateinit var tagService: TagService
+    private lateinit var createEstimatedReadingTimeChatClient: ChatClient
     @Mock
     private lateinit var jsonMapper: JsonMapper
     private lateinit var aiAssistantService: AiAssistantService
@@ -22,11 +22,11 @@ class AiAssistantServiceTest {
     @BeforeEach
     fun setup() {
         createTaskChatClient = Mockito.mock(ChatClient::class.java)
-        taskService = Mockito.mock(TaskService::class.java)
-        tagService = Mockito.mock(TagService::class.java)
+        chatClient = Mockito.mock(ChatClient::class.java)
+        createEstimatedReadingTimeChatClient = Mockito.mock(ChatClient::class.java)
         jsonMapper = Mockito.mock(JsonMapper::class.java)
         
-        aiAssistantService = AiAssistantService(createTaskChatClient, taskService, tagService, jsonMapper)
+        aiAssistantService = AiAssistantService(createTaskChatClient, chatClient, createEstimatedReadingTimeChatClient, jsonMapper)
     }
 
     @Test

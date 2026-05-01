@@ -48,6 +48,13 @@ export class TasksComponent implements OnInit {
   private editingTaskIdState = signal<number | null>(null);
   readonly editingTaskId = computed(() => this.editingTaskIdState());
 
+  // Estimated time details state
+  private selectedTaskForTimeDetailsState = signal<Task | null>(null);
+  readonly selectedTaskForTimeDetails = computed(() => this.selectedTaskForTimeDetailsState());
+  
+  private showEstimatedTimeModalState = signal<boolean>(false);
+  readonly showEstimatedTimeModal = computed(() => this.showEstimatedTimeModalState());
+
   private showModalState = signal<boolean>(false);
   readonly showModal = computed(() => this.showModalState());
 
@@ -573,4 +580,13 @@ export class TasksComponent implements OnInit {
     this.generateTasks();
   }
 
+  showEstimatedTimeDetails(task: Task): void {
+    this.selectedTaskForTimeDetailsState.set(task);
+    this.showEstimatedTimeModalState.set(true);
+  }
+  
+  closeEstimatedTimeModal(): void {
+    this.showEstimatedTimeModalState.set(false);
+    this.selectedTaskForTimeDetailsState.set(null);
+  }
 }

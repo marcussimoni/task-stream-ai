@@ -1,6 +1,7 @@
 package br.com.taskstreamai.dto
 
 import br.com.taskstreamai.model.Priority
+import br.com.taskstreamai.model.TechnicalDepth
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import java.time.LocalDate
@@ -21,7 +22,13 @@ data class TaskDTO(
     val customEndDateSelected: Boolean = false,
     val priority: Priority,
     val link: String?,
-    var summary: String?
+    var summary: String?,
+    // Estimated time fields for content analysis
+    val totalWordCount: Int?,
+    val technicalDepth: TechnicalDepth?,
+    val estimatedReadingTimeMinutes: Int?,
+    val depthJustification: String?,
+    val recommendedPace: String?
 )
 
 data class TaskRequestDTO(
@@ -55,7 +62,23 @@ data class TaskRequestDTO(
     @JsonPropertyDescription("The priority level: LOW, MEDIUM, or HIGH")
     val priority: Priority = Priority.MEDIUM,
     @JsonProperty("link")
-    val link: String? = null
+    val link: String? = null,
+    // Estimated time fields for content analysis
+    @JsonProperty("totalWordCount")
+    @JsonPropertyDescription("Total word count of task content and linked materials")
+    val totalWordCount: Int? = null,
+    @JsonProperty("technicalDepth")
+    @JsonPropertyDescription("Technical complexity level: LOW, MEDIUM, or HIGH")
+    val technicalDepth: TechnicalDepth? = null,
+    @JsonProperty("estimatedReadingTimeMinutes")
+    @JsonPropertyDescription("Estimated reading time in minutes")
+    val estimatedReadingTimeMinutes: Int? = null,
+    @JsonProperty("depthJustification")
+    @JsonPropertyDescription("AI-provided justification for technical depth assessment")
+    val depthJustification: String? = null,
+    @JsonProperty("recommendedPace")
+    @JsonPropertyDescription("Recommended reading pace for this content")
+    val recommendedPace: String? = null
 )
 
 data class TaskAggregatedByTagsDTO(

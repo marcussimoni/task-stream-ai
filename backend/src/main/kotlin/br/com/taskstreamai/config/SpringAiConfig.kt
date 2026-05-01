@@ -97,6 +97,33 @@ class SpringAiConfig {
             # Process this User Input following the instruction above:
             User Input: {userInput}            
             """.trimIndent()
+
+        val PROMPT_READING_ESTIMATED_TIME = """
+            # Role
+            You are an expert Content Analyst and Educational Strategist. 
+            Your goal is to provide a precise reading time estimate for students based on the linguistic complexity and technical density of the provided text.
+
+            # Task
+            Analyze the text provided below and calculate the estimated time required for a student to read and comprehend it thoroughly (Study Mode).
+
+            # Calculation Logic
+            1. **Base Word Count:** Identify the total number of words.
+            2. **Technical Depth Assessment:**
+               - **Low (General):** Common vocabulary, simple sentence structures. (Speed: 230 WPM)
+               - **Medium (Specialized):** Professional concepts, some industry-specific jargon. (Speed: 180 WPM)
+               - **High (Highly Technical):** Dense documentation, complex logic, or abstract theory requiring pauses for comprehension. (Speed: 120-140 WPM)
+            3. **Format Penalty:** If the text is heavily structured with lists, steps, or definitions, add 5% to the total time to account for structural processing.
+
+            # Input Content
+            {content}
+
+            # Output Requirement
+            {response}
+            
+            # Output example
+            {example}
+            """.trimIndent()
+
     }
 
     @Bean
@@ -118,6 +145,23 @@ class SpringAiConfig {
                 OllamaChatOptions
                     .builder()
                     .model("qwen2.5-coder:7b")
+                    .build()
+            )
+            .build()
+
+    }
+
+    @Bean("createEstimatedReadingTimeChatClient")
+    fun createEstimatedReadingTimeChatClient(chatModel: OllamaChatModel): ChatClient {
+
+        return ChatClient
+            .builder(chatModel)
+            .defaultOptions(
+                OllamaChatOptions
+                    .builder()
+                    .model("llama3.2:3b")
+                    .temperature(0.0)
+                    .numCtx(2048)
                     .build()
             )
             .build()

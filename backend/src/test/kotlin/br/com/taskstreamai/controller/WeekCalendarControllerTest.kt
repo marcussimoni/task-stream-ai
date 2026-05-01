@@ -76,7 +76,12 @@ class WeekCalendarControllerTest @Autowired constructor(
                     customEndDateSelected = false,
                     priority = br.com.taskstreamai.model.Priority.MEDIUM,
                     link = null,
-                    summary = null
+                    summary = null,
+                    totalWordCount = null,
+                    technicalDepth = null,
+                    estimatedReadingTimeMinutes = null,
+                    depthJustification = null,
+                    recommendedPace = null
                 )
             ),
             WeekScheduleDTO(
@@ -200,7 +205,12 @@ class WeekCalendarControllerTest @Autowired constructor(
             customEndDateSelected = false,
             priority = br.com.taskstreamai.model.Priority.MEDIUM,
             link = null,
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.`when`(weekScheduleService.getTaskForTag(tagId)).thenReturn(task)
@@ -583,6 +593,8 @@ class WeekCalendarControllerTest @Autowired constructor(
                 endDateInterval = 1,
                 endDate = LocalDate.now().plusDays(1),
                 completed = false,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
                 tag = TagDTO(
                     id = 1L,
                     name = "Work",
@@ -595,8 +607,11 @@ class WeekCalendarControllerTest @Autowired constructor(
                 priority = br.com.taskstreamai.model.Priority.MEDIUM,
                 link = null,
                 summary = null,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             )
         ).`when`(weekScheduleService).getTaskForTag(1L)
 

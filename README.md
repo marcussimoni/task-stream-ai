@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.2.0
 last_updated: 2026-04-26
 author: AI / Developer
 ---
@@ -36,12 +36,15 @@ Not intended for production use or multi-user environments.***
 | **Metrics Dashboard** | Visual charts showing task completion by tag and time period |
 | **Database Backup** | On-demand backup and restore via admin panel |
 | **AI Integration** | Optional Ollama integration for AI-powered features |
+| **Estimated Read Time** | Content analysis with reading time estimates and technical depth assessment |
+| **Enhanced Tasks UI** | Modernized task management interface with improved UX and accessibility |
 
 ### AI Features
 | Feature | Description |
 |---------|-------------|
 | **AI-Powered Summary** | Generate summaries of websites and blog posts linked to tasks |
 | **AI Task Creation** | Create tasks using natural language prompts via AI assistance |
+| **Content Analysis** | AI-powered word count, technical depth, and reading time estimation |
 
 
 ## Architecture
@@ -152,6 +155,8 @@ Detailed PRDs are located in `spec/features/`:
 | Database Backup | `database-backup-restore.prd.md` |
 | Task Alarms | `task-alarm-notification.prd.md` |
 | Create Task with AI | `create-task-with-ai.md` |
+| Estimated Read Time | `estimated-read-time-for-task-content.prd.md` |
+| Tasks Component Enhancement | `tasks-component-enhancement.prd.md` |
 
 ## Screenshots
 

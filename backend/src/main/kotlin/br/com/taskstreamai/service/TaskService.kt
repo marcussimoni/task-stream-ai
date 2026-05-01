@@ -4,7 +4,6 @@ import br.com.taskstreamai.dto.LinkContentDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskQueryParamsDTO
 import br.com.taskstreamai.dto.TaskRequestDTO
-import br.com.taskstreamai.dto.TasksByTagDTO
 import br.com.taskstreamai.dto.TasksGroupedDTO
 import br.com.taskstreamai.exception.ResourceNotFoundException
 import br.com.taskstreamai.mapper.TaskMapper
@@ -14,6 +13,8 @@ import br.com.taskstreamai.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -28,7 +29,8 @@ private const val PERCENT_COMPLETED = 100
 class TaskService(
     private val taskRepository: TaskRepository,
     private val tagRepository: TagRepository,
-    private val summarizeArticleService: SummarizeArticleService
+    private val aiAssistantService: AiAssistantService,
+    private val webScraperService: WebScraperService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -55,9 +57,7 @@ class TaskService(
 
         val taskDto = TaskMapper.toDTO(savedTask)
 
-        serviceScope.launch {
-            summarizeArticleService.createTaskSummary(taskDto)
-        }
+        processBackgroundSummaryAndEstimatedTime(taskDto)
 
         return taskDto
     }
@@ -101,9 +101,7 @@ class TaskService(
         val savedTask = taskRepository.save(existingTask)
         val taskDto = TaskMapper.toDTO(savedTask)
 
-        serviceScope.launch {
-            summarizeArticleService.createTaskSummary(taskDto)
-        }
+        processBackgroundSummaryAndEstimatedTime(taskDto)
 
         return taskDto
     }
@@ -153,9 +151,11 @@ class TaskService(
 
     fun loadLinkContent(url: String): LinkContentDTO {
         logger.info("Loading link content for url: $url")
-        val site = summarizeArticleService.loadSiteFromUrl(url)
-        logger.info("Link content for url: ${site.title()}")
-        return LinkContentDTO(site.title())
+        val site = webScraperService.loadSiteFromUrl(url)
+        site.let {
+            logger.info("Link content for url: ${site.title()}")
+            return LinkContentDTO(site.title())
+        }
     }
 
     fun getLastTasks(total: Int): List<TaskDTO> {
@@ -178,6 +178,49 @@ class TaskService(
                 it.total,
                 tasks
             )
+        }
+
+    }
+
+    private fun processBackgroundSummaryAndEstimatedTime(task: TaskDTO) {
+        try {
+
+            val site = webScraperService.loadSiteFromUrl(task)
+
+            site?.let {
+
+                serviceScope.launch {
+
+                    val summary = aiAssistantService.createTaskSummary(site.content)
+
+                    summary.let {
+                        taskRepository.findById(task.id).ifPresent { entity ->
+                            entity.summary = summary
+                            entity.name = site.title
+                            taskRepository.save(entity)
+                            logger.info("Task ${task.id} summary updated successfully.")
+                        }
+                    }
+
+                }
+
+                serviceScope.launch {
+                    val estimatedTime = aiAssistantService.calculateEstimatedTime(site.content)
+                    taskRepository.findById(task.id).ifPresent { entity ->
+                        entity.totalWordCount = estimatedTime?.totalWordCount
+                        entity.estimatedReadingTimeMinutes = estimatedTime?.estimatedReadingTimeMinutes
+                        entity.technicalDepth = estimatedTime?.technicalDepth
+                        entity.depthJustification = estimatedTime?.depthJustification
+                        entity.recommendedPace = estimatedTime?.recommendedPace
+                        taskRepository.save(entity)
+                        logger.info("Task ${task.id} estimated time updated successfully.")
+                    }
+                }
+
+            }
+
+        } catch (e: Exception) {
+            logger.error("Failed to calculate summary for task: ${task.id}", e)
         }
 
     }

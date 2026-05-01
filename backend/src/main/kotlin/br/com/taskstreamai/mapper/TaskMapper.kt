@@ -19,7 +19,12 @@ object TaskMapper {
             tag = tag,
             customEndDateSelected = dto.customEndDateSelected,
             priority = dto.priority,
-            link = dto.link
+            link = dto.link,
+            totalWordCount = dto.totalWordCount,
+            technicalDepth = dto.technicalDepth,
+            estimatedReadingTimeMinutes = dto.estimatedReadingTimeMinutes,
+            depthJustification = dto.depthJustification,
+            recommendedPace = dto.recommendedPace
         )
     }
 
@@ -39,7 +44,12 @@ object TaskMapper {
             customEndDateSelected = entity.customEndDateSelected,
             priority = entity.priority,
             link = entity.link,
-            summary = entity.summary
+            summary = entity.summary,
+            totalWordCount = entity.totalWordCount,
+            technicalDepth = entity.technicalDepth,
+            estimatedReadingTimeMinutes = entity.estimatedReadingTimeMinutes,
+            depthJustification = entity.depthJustification,
+            recommendedPace = entity.recommendedPace
         )
     }
     

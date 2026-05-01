@@ -74,7 +74,12 @@ class TaskControllerTest @Autowired constructor(
             customEndDateSelected = false,
             priority = br.com.taskstreamai.model.Priority.HIGH,
             link = null,
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.`when`(taskService.createTask(requestDTO)).thenReturn(responseDTO)
@@ -163,7 +168,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.MEDIUM,
                 link = null,
-                summary = null
+                summary = null,
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             ),
             TaskDTO(
                 id = 2L,
@@ -187,7 +197,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.HIGH,
                 link = null,
-                summary = null
+                summary = null,
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             )
         )
         
@@ -230,7 +245,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.MEDIUM,
                 link = null,
-                summary = null
+                summary = null,
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             )
         )
         
@@ -273,7 +293,12 @@ class TaskControllerTest @Autowired constructor(
             customEndDateSelected = false,
             priority = br.com.taskstreamai.model.Priority.HIGH,
             link = null,
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.`when`(taskService.getTaskById(taskId)).thenReturn(task)
@@ -327,7 +352,12 @@ class TaskControllerTest @Autowired constructor(
             customEndDateSelected = true,
             priority = br.com.taskstreamai.model.Priority.CRITICAL,
             link = "https://example.com",
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.`when`(taskService.updateTask(taskId, requestDTO)).thenReturn(updatedTask)
@@ -385,7 +415,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.MEDIUM,
                 link = null,
-                summary = null
+                summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
             ),
             TaskDTO(
                 id = 2L,
@@ -409,7 +444,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.HIGH,
                 link = null,
-                summary = null
+                summary = null,
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             )
         )
         
@@ -451,7 +491,12 @@ class TaskControllerTest @Autowired constructor(
             customEndDateSelected = false,
             priority = br.com.taskstreamai.model.Priority.MEDIUM,
             link = null,
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.`when`(taskService.completeTask(taskId)).thenReturn(completedTask)
@@ -494,7 +539,12 @@ class TaskControllerTest @Autowired constructor(
                 customEndDateSelected = false,
                 priority = br.com.taskstreamai.model.Priority.MEDIUM,
                 link = null,
-                summary = null
+                summary = null,
+                totalWordCount = null,
+                technicalDepth = null,
+                estimatedReadingTimeMinutes = null,
+                depthJustification = null,
+                recommendedPace = null
             )
         )
         
@@ -711,7 +761,12 @@ class TaskControllerTest @Autowired constructor(
             customEndDateSelected = false,
             priority = br.com.taskstreamai.model.Priority.MEDIUM,
             link = null,
-            summary = null
+            summary = null,
+            totalWordCount = null,
+            technicalDepth = null,
+            estimatedReadingTimeMinutes = null,
+            depthJustification = null,
+            recommendedPace = null
         )
         
         Mockito.doReturn(listOf(task)).`when`(taskService).getAllTasks(TaskQueryParamsDTO(task = null))
