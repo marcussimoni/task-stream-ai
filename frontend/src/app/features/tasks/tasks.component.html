@@ -109,7 +109,7 @@
 
               <div class="progress-container">
                 <div class="progress-label">
-                  Progress: {{ task.currentValue || 0 }} / 100
+                  Progress :  {{ task.currentValue || 0 }} / 100
                   ({{ getProgressPercentage(task) | number:'1.0-0' }}%)
                 </div>
                 <div class="progress">
@@ -122,7 +122,7 @@
                 <!-- Estimated time display -->
                 <div *ngIf="task.estimatedReadingTimeMinutes" class="estimated-time-container">
                   <span class="estimated-time-label">
-                    Estimated read time: {{ task.estimatedReadingTimeMinutes }} min
+                    Estimated read time :  {{ task.estimatedReadingTimeMinutes }} min
                   </span>
                   <button 
                     class="btn btn-sm btn-outline-info info-btn" 
@@ -325,24 +325,24 @@
     <div class="modal-body">
       <div *ngIf="selectedTaskForTimeDetails()" class="time-details">
         <div class="detail-row">
-          <strong>Estimated Reading Time:</strong>
-          <span>{{ selectedTaskForTimeDetails()?.estimatedReadingTimeMinutes }} minutes</span>
+          <strong>Estimated Reading Time - </strong>&nbsp;
+          <span> {{ selectedTaskForTimeDetails()?.estimatedReadingTimeMinutes }} minutes</span>
         </div>
         <div class="detail-row" *ngIf="selectedTaskForTimeDetails()?.totalWordCount">
-          <strong>Total Word Count:</strong>
-          <span>{{ selectedTaskForTimeDetails()?.totalWordCount }} words</span>
+          <strong>Total Word Count - </strong>&nbsp;
+          <span> {{ selectedTaskForTimeDetails()?.totalWordCount }} words</span>
         </div>
         <div class="detail-row" *ngIf="selectedTaskForTimeDetails()?.technicalDepth">
-          <strong>Technical Depth:</strong>
-          <span>{{ selectedTaskForTimeDetails()?.technicalDepth }}</span>
+          <strong>Technical Depth - </strong>&nbsp;
+          <span> {{ selectedTaskForTimeDetails()?.technicalDepth }}</span>
         </div>
         <div class="detail-row" *ngIf="selectedTaskForTimeDetails()?.depthJustification">
-          <strong>Depth Justification:</strong>
-          <span>{{ selectedTaskForTimeDetails()?.depthJustification }}</span>
+          <strong>Depth Justification - </strong>&nbsp;
+          <span> {{ selectedTaskForTimeDetails()?.depthJustification }}</span>
         </div>
         <div class="detail-row" *ngIf="selectedTaskForTimeDetails()?.recommendedPace">
-          <strong>Recommended Pace:</strong>
-          <span>{{ selectedTaskForTimeDetails()?.recommendedPace }}</span>
+          <strong>Recommended Pace - </strong>&nbsp;
+          <span> {{ selectedTaskForTimeDetails()?.recommendedPace }}</span>
         </div>
       </div>
     </div>

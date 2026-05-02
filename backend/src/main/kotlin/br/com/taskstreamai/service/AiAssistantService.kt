@@ -3,24 +3,18 @@ package br.com.taskstreamai.service
 import br.com.taskstreamai.config.SpringAiConfig
 import br.com.taskstreamai.dto.AutomatedTaskDTO
 import br.com.taskstreamai.dto.EstimatedTimeDTO
-import br.com.taskstreamai.dto.SiteDTO
-import br.com.taskstreamai.dto.TagDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskRequestDTO
 import br.com.taskstreamai.model.Priority
-import br.com.taskstreamai.model.TechnicalDepth
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
 import org.springframework.ai.converter.BeanOutputConverter
-import org.springframework.ai.ollama.api.OllamaChatOptions
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.time.measureTime
 
 @Service
@@ -28,8 +22,8 @@ class AiAssistantService(
     @Qualifier("createTaskChatClient") private val createTaskChatClient: ChatClient,
     private val chatClient: ChatClient,
     @Qualifier("createEstimatedReadingTimeChatClient") private val createEstimatedReadingTimeChatClient: ChatClient,
-//    private val taskService: TaskService,
-//    private val tagService: TagService,
+    private val taskService: GetTaskService,
+    private val tagService: GetTagService,
     private val jsonMapper: JsonMapper,
 ) {
 
@@ -40,11 +34,10 @@ class AiAssistantService(
     private fun startAutomatedTaskCreation(automatedTaskDTO: AutomatedTaskDTO): List<TaskRequestDTO>? {
         logger.info("Creating automated task plan")
 
-        val tags = listOf<TagDTO>()//tagService.getAllTags();
-        val tasks: List<TaskDTO> = listOf()//taskService.getLastTasks(5)
+        val tasks: List<TaskDTO> = taskService.getLastTasks(5)
         val responseType = object : ParameterizedTypeReference<List<TaskRequestDTO>>() {}
         val payload = BeanOutputConverter(responseType)
-        val tagsTemplate = tags.joinToString(",") { "(${it.id} : ${it.name})" }
+        val tagsTemplate = tagService.getAllTagsTemplate()
         val validResponse = jsonMapper.writeValueAsString(listOf(TaskRequestDTO()))
 
         logger.info("Creating model with default input data")
@@ -98,30 +91,33 @@ class AiAssistantService(
 
         val model = mutableMapOf<String, Any>(
             Pair("content", siteContent),
-            Pair("response", payload.format),
-            Pair("example", EstimatedTimeDTO(
-                1000,
-                TechnicalDepth.MEDIUM,
-                60,
-                "Depth justification",
-                "Recommended pace"
-                )),
+            Pair("format", payload.format)
         )
 
         var estimatedTime: EstimatedTimeDTO? = null
 
         val duration = measureTime {
             try {
-                estimatedTime = createEstimatedReadingTimeChatClient
-                    .prompt(PromptTemplate(SpringAiConfig.PROMPT_READING_ESTIMATED_TIME).create(model))
+
+                val prompt = PromptTemplate(SpringAiConfig.PROMPT_READING_ESTIMATED_TIME).create(model)
+
+                val content = createEstimatedReadingTimeChatClient
+                    .prompt(prompt)
                     .call()
-                    .entity(EstimatedTimeDTO::class.java)
+                    .chatClientResponse().chatResponse()?.result?.output?.text
+
+                content?.let {
+                    estimatedTime = payload.convert(content)
+                }
+
             } catch (e: Exception) {
                 logger.error("Error while calculating estimated reading time", e)
             }
         }
 
         logger.info("Estimated time calculation completed in: $duration ms")
+
+        logger.info("Estimated read time: $estimatedTime")
 
         return estimatedTime
 

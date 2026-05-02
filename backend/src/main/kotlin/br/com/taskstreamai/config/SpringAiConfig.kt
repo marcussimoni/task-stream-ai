@@ -118,10 +118,7 @@ class SpringAiConfig {
             {content}
 
             # Output Requirement
-            {response}
-            
-            # Output example
-            {example}
+            {format}
             """.trimIndent()
 
     }
@@ -160,7 +157,7 @@ class SpringAiConfig {
                 OllamaChatOptions
                     .builder()
                     .model("llama3.2:3b")
-                    .temperature(0.0)
+                    .temperature(0.5)
                     .numCtx(2048)
                     .build()
             )

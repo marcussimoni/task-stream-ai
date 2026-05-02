@@ -158,12 +158,6 @@ class TaskService(
         }
     }
 
-    fun getLastTasks(total: Int): List<TaskDTO> {
-        val tasks = taskRepository.findTaskByDates(total)
-        val tasksTemplate = tasks.map { TaskMapper.toDTO(it) }
-        return tasksTemplate
-    }
-
     fun getTasksGroupedByTag(month: LocalDate): List<TasksGroupedDTO> {
 
         val startDate: LocalDate = month.with(TemporalAdjusters.firstDayOfMonth())
