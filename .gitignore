@@ -5,7 +5,7 @@ data
 backups/*
 target
 .DS_STORE
-build.sh
+# build.sh
 
 #frontend
 frontend/node_modules

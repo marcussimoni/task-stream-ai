@@ -127,41 +127,7 @@ class SpringAiConfig {
     @Primary
     fun chatClient(chatModel: OllamaChatModel): ChatClient {
         return ChatClient
-            .builder(chatModel)
-            .defaultOptions(
-                OllamaChatOptions.builder().model("llama3.2:3b").build()
-            ).build()
+            .builder(chatModel).build()
     }
 
-    @Bean("createTaskChatClient")
-    fun createTaskChatClient(chatModel: OllamaChatModel): ChatClient {
-
-        return ChatClient
-            .builder(chatModel)
-            .defaultOptions(
-                OllamaChatOptions
-                    .builder()
-                    .model("qwen2.5-coder:7b")
-                    .build()
-            )
-            .build()
-
-    }
-
-    @Bean("createEstimatedReadingTimeChatClient")
-    fun createEstimatedReadingTimeChatClient(chatModel: OllamaChatModel): ChatClient {
-
-        return ChatClient
-            .builder(chatModel)
-            .defaultOptions(
-                OllamaChatOptions
-                    .builder()
-                    .model("llama3.2:3b")
-                    .temperature(0.5)
-                    .numCtx(2048)
-                    .build()
-            )
-            .build()
-
-    }
 }

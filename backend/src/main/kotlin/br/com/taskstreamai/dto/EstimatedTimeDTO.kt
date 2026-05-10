@@ -1,6 +1,5 @@
 package br.com.taskstreamai.dto
 
-import br.com.taskstreamai.model.TechnicalDepth
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class EstimatedTimeDTO(
@@ -8,7 +7,7 @@ data class EstimatedTimeDTO(
     val totalWordCount: Int,
 
     @JsonProperty("technicalDepth")
-    val technicalDepth: TechnicalDepth,
+    val technicalDepth: String,
 
     @JsonProperty("estimatedReadingTimeMinutes")
     val estimatedReadingTimeMinutes: Int,

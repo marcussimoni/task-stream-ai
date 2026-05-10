@@ -1,5 +1,6 @@
 package br.com.taskstreamai.service
 
+import br.com.taskstreamai.dto.EstimatedTimeDTO
 import br.com.taskstreamai.dto.LinkContentDTO
 import br.com.taskstreamai.dto.TaskDTO
 import br.com.taskstreamai.dto.TaskQueryParamsDTO
@@ -8,6 +9,7 @@ import br.com.taskstreamai.dto.TasksGroupedDTO
 import br.com.taskstreamai.exception.ResourceNotFoundException
 import br.com.taskstreamai.mapper.TaskMapper
 import br.com.taskstreamai.model.Task
+import br.com.taskstreamai.model.TechnicalDepth
 import br.com.taskstreamai.repository.TagRepository
 import br.com.taskstreamai.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
@@ -19,8 +21,10 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.util.StringUtils
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
+import kotlin.math.log
 
 private const val PERCENT_COMPLETED = 100
 
@@ -176,6 +180,17 @@ class TaskService(
 
     }
 
+    private fun getTechnicalDepthEnum(dto: EstimatedTimeDTO?): TechnicalDepth {
+
+        return try {
+            TechnicalDepth.valueOf(dto!!.technicalDepth.uppercase())
+        } catch (e: Exception) {
+            logger.warn("Technical Depth ${dto?.technicalDepth} not found")
+            TechnicalDepth.MEDIUM
+        }
+
+    }
+
     private fun processBackgroundSummaryAndEstimatedTime(task: TaskDTO) {
         try {
 
@@ -203,7 +218,7 @@ class TaskService(
                     taskRepository.findById(task.id).ifPresent { entity ->
                         entity.totalWordCount = estimatedTime?.totalWordCount
                         entity.estimatedReadingTimeMinutes = estimatedTime?.estimatedReadingTimeMinutes
-                        entity.technicalDepth = estimatedTime?.technicalDepth
+                        entity.technicalDepth = getTechnicalDepthEnum(estimatedTime)
                         entity.depthJustification = estimatedTime?.depthJustification
                         entity.recommendedPace = estimatedTime?.recommendedPace
                         taskRepository.save(entity)

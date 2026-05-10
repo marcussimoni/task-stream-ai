@@ -25,6 +25,12 @@ class KotlinReflectionHints : RuntimeHintsRegistrar {
                     MemberCategory.INVOKE_PUBLIC_METHODS
                 )
             }
+            hints.reflection().registerType(br.com.taskstreamai.dto.EstimatedTimeDTO::class.java) {
+                it.withMembers(
+                    MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                    MemberCategory.INVOKE_PUBLIC_METHODS
+                )
+            }
         } catch (e: ClassNotFoundException) {
             logger.error("Class could not be found ", e)
         }

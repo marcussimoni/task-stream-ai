@@ -10,11 +10,7 @@ import tools.jackson.databind.json.JsonMapper
 class AiAssistantServiceTest {
 
     @Mock
-    private lateinit var createTaskChatClient: ChatClient
-    @Mock
     private lateinit var chatClient: ChatClient
-    @Mock
-    private lateinit var createEstimatedReadingTimeChatClient: ChatClient
     @Mock
     private lateinit var taskService: GetTaskService
     @Mock
@@ -25,14 +21,12 @@ class AiAssistantServiceTest {
 
     @BeforeEach
     fun setup() {
-        createTaskChatClient = Mockito.mock(ChatClient::class.java)
         chatClient = Mockito.mock(ChatClient::class.java)
-        createEstimatedReadingTimeChatClient = Mockito.mock(ChatClient::class.java)
         taskService = Mockito.mock(GetTaskService::class.java)
         tagService = Mockito.mock(GetTagService::class.java)
         jsonMapper = Mockito.mock(JsonMapper::class.java)
         
-        aiAssistantService = AiAssistantService(createTaskChatClient, chatClient, createEstimatedReadingTimeChatClient, taskService, tagService, jsonMapper)
+        aiAssistantService = AiAssistantService(chatClient, taskService, tagService, jsonMapper)
     }
 
     @Test
